@@ -36,6 +36,10 @@ next-env.d.ts
 # prisma
 lib/generated/
 
+# cli build artifacts
+cli/dist/
+cli/package-lock.json
+
 # ide
 .vscode/
 .idea/

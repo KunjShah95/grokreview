@@ -13,6 +13,7 @@ function buildSignInCallbackUrl(installationId: string | null): string {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const installationId = searchParams.get("installation_id");
+  const state = searchParams.get("state");
   const session = await getServerSession();
 
   if (!session) {
@@ -20,9 +21,23 @@ export async function GET(request: Request) {
     redirect(`/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`);
   }
 
-  if (installationId) {
-    await saveInstallation(session.user.id, Number(installationId))
+  if (state && state !== session.user.id) {
+    return Response.json(
+      { error: "Invalid state parameter — installation may have been tampered with." },
+      { status: 403 }
+    );
   }
 
-  redirect(DASHBOARD_ROUTES.github)
+  if (installationId) {
+    const parsedId = Number(installationId);
+    if (!Number.isFinite(parsedId) || parsedId <= 0) {
+      return Response.json(
+        { error: "Invalid installation_id" },
+        { status: 400 }
+      );
+    }
+    await saveInstallation(session.user.id, parsedId);
+  }
+
+  redirect(DASHBOARD_ROUTES.github);
 }

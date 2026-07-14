@@ -110,7 +110,6 @@ export async function handleCIReview(input: CIReviewInput): Promise<CIReviewResu
       system: SYSTEM_PROMPT,
       prompt: `Repository: ${owner}/${repo}
 Pull request: #${prNumber} - ${title}
-Author: @${input.owner}
 
 Diff:
 \`\`\`diff

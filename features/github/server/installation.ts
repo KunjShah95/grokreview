@@ -23,26 +23,40 @@ function buildDisconnectedStatus(): GithubInstallationStatus {
 
 export async function getInstallationStatus(userId: string) {
   const installation = await prisma.githubInstallation.findUnique({
-    where: { userId }
+    where: { userId },
   });
 
   if (!installation) {
-    return buildDisconnectedStatus()
+    return buildDisconnectedStatus();
   }
 
   return {
     connected: true,
     accountLogin: installation.accountLogin,
-    installedAt: installation.createdAt.toISOString()
-  }
+    installedAt: installation.createdAt.toISOString(),
+  };
 }
 
-export async function saveInstallation(userId: string, installationId: number) {
+export async function saveInstallation(
+  userId: string,
+  installationId: number
+) {
   const app = getGithubApp();
-  const { data } = await app.octokit.request(
-    "GET /app/installations/{installation_id}",
-    { installation_id: installationId }
-  )
+  let data: { account?: { login?: string; slug?: string } | null; target_type?: string | null };
+  try {
+    const response = await app.octokit.request(
+      "GET /app/installations/{installation_id}",
+      { installation_id: installationId }
+    );
+    data = response.data;
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Unknown error";
+    throw new Error(
+      `Failed to verify GitHub installation ${installationId}: ${message}`
+    );
+  }
+
   const accountLogin = getAccountLogin(data.account);
 
   await prisma.githubInstallation.upsert({
@@ -57,12 +71,16 @@ export async function saveInstallation(userId: string, installationId: number) {
       installationId,
       accountLogin,
       accountType: data.target_type ?? null,
-    }
-  })
+    },
+  });
 }
 
 export async function deleteInstallation(userId: string) {
-  await prisma.githubInstallation.delete({ where: { userId } });
+  try {
+    await prisma.githubInstallation.delete({ where: { userId } });
+  } catch {
+    // Installation may have already been deleted — safe to ignore
+  }
 }
 
 export async function getUserIdByInstallationId(installationId: number) {

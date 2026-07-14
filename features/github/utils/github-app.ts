@@ -2,22 +2,35 @@ import { App } from "octokit";
 
 let githubApp: App | null = null;
 
+function getRequiredEnv(name: string): string {
+  const val = process.env[name];
+  if (!val) {
+    throw new Error(
+      `Missing required environment variable: ${name}. ` +
+      `Set it in your .env file or Vercel project settings.`
+    );
+  }
+  return val;
+}
+
 export function getGithubApp() {
   if (!githubApp) {
+    const appId = getRequiredEnv("GITHUB_APP_ID");
+    const privateKey = getRequiredEnv("GITHUB_APP_PRIVATE_KEY");
+    const webhookSecret = getRequiredEnv("GITHUB_WEBHOOK_SECRET");
+
     githubApp = new App({
-      appId: process.env.GITHUB_APP_ID!,
-      privateKey: process.env.GITHUB_APP_PRIVATE_KEY!.replace(/\\n/g, "\n"),
-      webhooks: {
-        secret: process.env.GITHUB_WEBHOOK_SECRET!
-      }
-    })
+      appId,
+      privateKey: privateKey.replace(/\\n/g, "\n"),
+      webhooks: { secret: webhookSecret },
+    });
   }
   return githubApp;
 }
 
 export function getGithubInstallUrl(userId: string) {
-  const url = new URL(`https://github.com/apps/grokreview/installations/new`);
-  // `state` round-trips through GitHub so we can link the installation to this user.
+  const slug = process.env.GITHUB_APP_SLUG || "grokreview";
+  const url = new URL(`https://github.com/apps/${slug}/installations/new`);
   url.searchParams.set("state", userId);
   return url.toString();
 }

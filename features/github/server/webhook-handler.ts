@@ -1,17 +1,21 @@
 import { inngest } from "@/features/inngest/client";
-import { savePullRequest, hasPRChanged } from "@/features/reviews/server/save-pull-request";
+import {
+  savePullRequest,
+  hasPRChanged,
+} from "@/features/reviews/server/save-pull-request";
 import { getGithubApp } from "../utils/github-app";
-import { getUserIdByInstallationId } from "./installation";
+import {
+  getUserIdByInstallationId,
+  deleteInstallation,
+} from "./installation";
 import { canUserReview } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 import { logWebhookEvent } from "@/features/webhooks/server/log";
 
-const REVIEWABLE_ACTIONS = ["opened", "synchronize", "reopened"];
+const REVIEWABLE_ACTIONS = ["opened", "synchronize", "reopened", "ready_for_review"];
 
 export type PullRequestWebhookPayload = {
-  /** Webhook action, e.g. `opened`, `synchronize`, `reopened` */
   action: string;
-  /** GitHub App installation that received the event */
   installation: { id: number };
   repository: { full_name: string };
   pull_request: {
@@ -27,136 +31,237 @@ async function isSignatureValid(payload: string, signature: string | null) {
   if (!signature) {
     return false;
   }
-  const app = getGithubApp();
-  return app.webhooks.verify(payload, signature);
+  try {
+    const app = getGithubApp();
+    return app.webhooks.verify(payload, signature);
+  } catch {
+    return false;
+  }
+}
+
+type WebhookLogInput = {
+  eventName: string;
+  action: string | null;
+  repoFullName: string | null;
+  status: "received" | "processed" | "failed";
+  statusCode: number;
+  durationMs: number;
+  error: string | null;
+};
+
+function logEvent(input: WebhookLogInput) {
+  logWebhookEvent({
+    ...input,
+    payload: input.error
+      ? JSON.stringify({ error: input.error })
+      : JSON.stringify({}),
+  });
 }
 
 export async function handleGithubWebhook(request: Request) {
   const startTime = Date.now();
-  const payload = await request.text();
+
+  let payload: string;
+  try {
+    payload = await request.text();
+  } catch {
+    return Response.json(
+      { error: "Failed to read request body" },
+      { status: 400 }
+    );
+  }
+
   const signature = request.headers.get("x-hub-signature-256");
   const eventName = request.headers.get("x-github-event") || "unknown";
 
-  // Validate signature
   const isValid = await isSignatureValid(payload, signature);
   if (!isValid) {
-    logWebhookEvent({
+    logEvent({
       eventName,
       action: null,
       repoFullName: null,
       status: "failed",
       statusCode: 401,
       durationMs: Date.now() - startTime,
-      payload,
       error: "Invalid signature",
     });
     return Response.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  // Parse event for non-pull_request events
-  if (eventName !== "pull_request") {
-    const parsed = JSON.parse(payload) as Record<string, unknown>;
-    const repoFullName = (parsed.repository as Record<string, unknown> | undefined)?.full_name as string | null;
+  // Handle installation events (install, uninstall)
+  if (eventName === "installation") {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      return Response.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
-    logWebhookEvent({
+    const installationData = parsed.installation as
+      | { id: number }
+      | undefined;
+    const action = parsed.action as string | undefined;
+
+    if (action === "deleted" && installationData?.id) {
+      const userId = await getUserIdByInstallationId(installationData.id);
+      if (userId) {
+        await deleteInstallation(userId);
+      }
+    }
+
+    logEvent({
+      eventName,
+      action: action || null,
+      repoFullName: null,
+      status: "received",
+      statusCode: 200,
+      durationMs: Date.now() - startTime,
+      error: null,
+    });
+
+    return Response.json({ received: true });
+  }
+
+  // Skip non-pull_request events
+  if (eventName !== "pull_request") {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      return Response.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+    const repoFullName = (
+      parsed.repository as Record<string, unknown> | undefined
+    )?.full_name as string | null;
+
+    logEvent({
       eventName,
       action: null,
       repoFullName,
       status: "received",
       statusCode: 200,
       durationMs: Date.now() - startTime,
-      payload,
       error: null,
     });
 
     return Response.json({ received: true });
   }
 
-  const event = JSON.parse(payload) as PullRequestWebhookPayload;
+  // Parse pull_request event
+  let event: PullRequestWebhookPayload;
+  try {
+    event = JSON.parse(payload) as PullRequestWebhookPayload;
+  } catch {
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
   const repoFullName = event.repository.full_name;
 
-  // Webhook event log for non-reviewable actions
   if (!REVIEWABLE_ACTIONS.includes(event.action)) {
-    logWebhookEvent({
+    logEvent({
       eventName,
       action: event.action,
       repoFullName,
       status: "received",
       statusCode: 200,
       durationMs: Date.now() - startTime,
-      payload,
       error: null,
     });
     return Response.json({ received: true });
   }
 
   // Review caching: check if the PR has actually changed
-  const prChanged = await hasPRChanged(
-    repoFullName,
-    event.pull_request.number,
-    event.pull_request.head.sha
-  );
+  let prChanged: boolean;
+  try {
+    prChanged = await hasPRChanged(
+      repoFullName,
+      event.pull_request.number,
+      event.pull_request.head.sha
+    );
+  } catch {
+    return Response.json(
+      { error: "Failed to check PR state" },
+      { status: 500 }
+    );
+  }
 
   if (!prChanged) {
-    // No changes — skip re-review but log it
-    logWebhookEvent({
+    logEvent({
       eventName,
       action: event.action,
       repoFullName,
       status: "received",
       statusCode: 200,
       durationMs: Date.now() - startTime,
-      payload,
       error: null,
     });
-
     return Response.json({ received: true, cached: true });
   }
 
-  const pullRequest = await savePullRequest(event);
-  const userId = await getUserIdByInstallationId(event.installation.id);
+  let pullRequest;
+  try {
+    pullRequest = await savePullRequest(event);
+  } catch {
+    return Response.json(
+      { error: "Failed to save pull request" },
+      { status: 500 }
+    );
+  }
 
-  // Check usage limits
+  let userId: string | null = null;
+  try {
+    userId = await getUserIdByInstallationId(event.installation.id);
+  } catch {
+    // Non-fatal — continue without user context
+  }
+
   if (userId) {
-    const allowed = await canUserReview(userId);
-    if (!allowed) {
-      await prisma.pullRequest.update({
-        where: { id: pullRequest.id },
-        data: { status: "rate_limited" }
-      });
+    try {
+      const allowed = await canUserReview(userId);
+      if (!allowed) {
+        await prisma.pullRequest.update({
+          where: { id: pullRequest.id },
+          data: { status: "rate_limited" },
+        });
 
-      logWebhookEvent({
-        eventName,
-        action: event.action,
-        repoFullName,
-        status: "failed",
-        statusCode: 429,
-        durationMs: Date.now() - startTime,
-        payload,
-        error: "Rate limited — user exceeded free monthly limit",
-      });
+        logEvent({
+          eventName,
+          action: event.action,
+          repoFullName,
+          status: "failed",
+          statusCode: 429,
+          durationMs: Date.now() - startTime,
+          error: "Rate limited — user exceeded free monthly limit",
+        });
 
-      return Response.json({ received: true, rateLimited: true });
+        return Response.json({ received: true, rateLimited: true });
+      }
+    } catch {
+      // Non-fatal — allow review to proceed if usage check fails
     }
   }
 
-  // Log processed webhook
-  logWebhookEvent({
+  logEvent({
     eventName,
     action: event.action,
     repoFullName,
     status: "processed",
     statusCode: 200,
     durationMs: Date.now() - startTime,
-    payload: JSON.stringify({ /* truncated for log */ }),
     error: null,
   });
 
-  // Send to Inngest for background processing
-  await inngest.send({
-    name: "github/pr.received",
-    data: { pullRequestId: pullRequest.id },
-  });
+  try {
+    await inngest.send({
+      name: "github/pr.received",
+      data: { pullRequestId: pullRequest.id },
+    });
+  } catch {
+    return Response.json(
+      { error: "Failed to queue review" },
+      { status: 500 }
+    );
+  }
 
   return Response.json({ received: true });
 }
