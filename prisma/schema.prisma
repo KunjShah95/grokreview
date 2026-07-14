@@ -33,6 +33,7 @@ model User {
   sessions            Session[]
   accounts            Account[]
   githubInstallation  GithubInstallation?
+  usageAlerts         UsageAlert[]
 
   @@unique([email])
   @@map("user")
@@ -124,6 +125,19 @@ model Account {
 
   @@index([userId])
   @@map("account")
+}
+
+model UsageAlert {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  threshold      Int      // 80 or 100 (percentage)
+  sentAt         DateTime @default(now())
+  billingMonth   String   // e.g. "2026-07" — prevents re-sending within same cycle
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, billingMonth, threshold])
+  @@map("usage_alert")
 }
 
 model Verification {

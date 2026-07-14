@@ -1,6 +1,4 @@
-import React from 'react'
-import Image from "next/image";
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 import {
   Card,
   CardContent,
@@ -14,11 +12,11 @@ import {
   Field,
   FieldDescription,
 } from "@/components/ui/field";
-import { GithubSignInForm } from '@/features/auth/components/github-sign-in-form';
+import { GithubSignInForm } from "@/features/auth/components/github-sign-in-form";
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Sign in to Chai AI Code Reviewer with your GitHub account.",
+  description: "Sign in to GrokReview with your GitHub account.",
 };
 
 type SignInPageProps = {
@@ -29,21 +27,11 @@ const SignInPage = async ({ searchParams }: SignInPageProps) => {
   const { callbackUrl } = await searchParams;
 
   return (
-    <Card className="border-border/80 shadow-sm">
-      <CardHeader className="items-center text-center">
-        <div className="mb-6 flex justify-center pt-2">
-          <Image
-            src="/logo2.svg"
-            alt="Chai AI Code Reviewer"
-            width={172}
-            height={172}
-            priority
-            className="text-foreground"
-          />
-        </div>
-        <CardTitle className="text-base">Welcome back</CardTitle>
+    <Card className="border-border shadow-[0_20px_50px_-30px_rgba(30,27,75,0.35)]">
+      <CardHeader>
+        <CardTitle className="text-xl tracking-tight">Sign in to GrokReview</CardTitle>
         <CardDescription>
-          Sign in with GitHub to review and manage your code.
+          Connect GitHub to start reviewing pull requests.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -51,16 +39,17 @@ const SignInPage = async ({ searchParams }: SignInPageProps) => {
           <FieldGroup>
             <Field>
               <GithubSignInForm callbackUrl={callbackUrl} />
-              <FieldDescription className="text-center">
-                We only request the permissions needed to identify your
-                account. You can revoke access anytime from GitHub settings.
+              <FieldDescription>
+                We request only the permissions needed to identify your account
+                and read the repositories you choose. Revoke access anytime from
+                GitHub settings.
               </FieldDescription>
             </Field>
           </FieldGroup>
         </FieldSet>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default SignInPage
+export default SignInPage;

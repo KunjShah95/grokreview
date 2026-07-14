@@ -22,6 +22,7 @@ export type PRHistoryFilters = {
   status?: string;
   repo?: string;
   search?: string;
+  model?: string;
 };
 
 export async function getPRReviewHistory(
@@ -44,6 +45,10 @@ export async function getPRReviewHistory(
 
   if (filters?.repo) {
     where.repoFullName = { contains: filters.repo, mode: "insensitive" };
+  }
+
+  if (filters?.model) {
+    where.model = filters.model;
   }
 
   if (filters?.search) {
@@ -75,6 +80,31 @@ export async function getPRReviewHistory(
     reviewedAt: pr.reviewedAt?.toISOString() ?? null,
     createdAt: pr.createdAt.toISOString(),
     updatedAt: pr.updatedAt.toISOString(),
+  }));
+}
+
+/**
+ * Get the distinct models used for reviews, along with counts.
+ */
+export async function getAvailableModels(userId: string) {
+  const installationId = await getUserInstallationId(userId);
+  if (!installationId) {
+    return [];
+  }
+
+  const models = await prisma.pullRequest.groupBy({
+    by: ["model"],
+    where: {
+      installationId,
+      model: { not: null },
+    },
+    _count: { model: true },
+    orderBy: { _count: { model: "desc" } },
+  });
+
+  return models.map((m) => ({
+    model: m.model as string,
+    count: m._count.model,
   }));
 }
 

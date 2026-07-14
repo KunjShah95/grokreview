@@ -3,7 +3,11 @@ import Link from "next/link";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DASHBOARD_ROUTES } from "@/features/dashboard/lib/routes";
 import { requireAuth } from "@/features/auth/actions";
-import { getPRReviewHistory, getPRReviewStats } from "@/features/reviews/server/get-pr-history";
+import {
+  getPRReviewHistory,
+  getPRReviewStats,
+  getAvailableModels,
+} from "@/features/reviews/server/get-pr-history";
 import { PRHistoryList } from "@/features/reviews/components/pr-history-list";
 import { Button } from "@/components/ui/button";
 
@@ -13,9 +17,10 @@ export const metadata: Metadata = {
 
 export default async function DashboardPullRequestPage() {
   const session = await requireAuth();
-  const [prs, stats] = await Promise.all([
+  const [prs, stats, models] = await Promise.all([
     getPRReviewHistory(session.user.id),
     getPRReviewStats(session.user.id),
+    getAvailableModels(session.user.id),
   ]);
 
   return (
@@ -45,7 +50,7 @@ export default async function DashboardPullRequestPage() {
       </div>
 
       {prs.length > 0 ? (
-        <PRHistoryList items={prs} />
+        <PRHistoryList items={prs} models={models} />
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6">
           <p className="text-sm text-muted-foreground">

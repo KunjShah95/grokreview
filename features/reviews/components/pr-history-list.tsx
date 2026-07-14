@@ -7,6 +7,7 @@ import {
   CaretUp,
   Eye,
   EyeSlash,
+  Funnel,
 } from "@phosphor-icons/react";
 import type { PRReviewHistoryItem } from "@/features/reviews/server/get-pr-history";
 import {
@@ -21,8 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+type AvailableModel = {
+  model: string;
+  count: number;
+};
+
 type PRHistoryListProps = {
   items: PRReviewHistoryItem[];
+  models: AvailableModel[];
 };
 
 const STATUS_STYLES: Record<string, { label: string; variant: "secondary" | "default" | "destructive" | "outline" }> = {
@@ -84,12 +91,14 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export function PRHistoryList({ items }: PRHistoryListProps) {
+export function PRHistoryList({ items, models }: PRHistoryListProps) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [modelFilter, setModelFilter] = useState("all");
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
-  // Filter based on search and status
+  // Filter based on search, status, and model
   const filtered = items.filter((pr) => {
     const matchesSearch =
       !search ||
@@ -99,7 +108,9 @@ export function PRHistoryList({ items }: PRHistoryListProps) {
 
     const matchesStatus = statusFilter === "all" || pr.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
+    const matchesModel = modelFilter === "all" || pr.model === modelFilter;
+
+    return matchesSearch && matchesStatus && matchesModel;
   });
 
   // Count by status
@@ -110,6 +121,12 @@ export function PRHistoryList({ items }: PRHistoryListProps) {
     reviewed: items.filter((i) => i.status === "reviewed").length,
     rate_limited: items.filter((i) => i.status === "rate_limited").length,
   };
+
+  // Count by model
+  const activeModel = modelFilter === "all" ? null : modelFilter;
+  const modelLabel = activeModel
+    ? (activeModel.length > 30 ? activeModel.slice(0, 30) + "…" : activeModel)
+    : "All Models";
 
   const toggleRow = (id: string) => {
     setExpandedRow(expandedRow === id ? null : id);
@@ -141,12 +158,47 @@ export function PRHistoryList({ items }: PRHistoryListProps) {
             </Button>
           ))}
         </div>
-        <Input
-          placeholder="Search PRs by title, repo, or author..."
-          className="max-w-xs h-8 text-xs"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex items-center gap-2">
+          {/* Model Filter Dropdown */}
+          <div className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1.5"
+              onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+              onBlur={() => setTimeout(() => setModelDropdownOpen(false), 150)}
+            >
+              <Funnel className="size-3" />
+              {modelLabel}
+            </Button>
+            {modelDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] rounded-none border border-border bg-background shadow-lg">
+                <button
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors ${modelFilter === "all" ? "bg-muted font-medium" : ""}`}
+                  onClick={() => { setModelFilter("all"); setModelDropdownOpen(false); }}
+                >
+                  All Models
+                </button>
+                {models.map((m) => (
+                  <button
+                    key={m.model}
+                    className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors flex items-center justify-between ${modelFilter === m.model ? "bg-muted font-medium" : ""}`}
+                    onClick={() => { setModelFilter(m.model); setModelDropdownOpen(false); }}
+                  >
+                    <code className="text-[11px] truncate max-w-[140px]">{m.model}</code>
+                    <span className="text-[10px] text-muted-foreground ml-2 tabular-nums">{m.count}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <Input
+            placeholder="Search PRs by title, repo, or author..."
+            className="max-w-48 h-8 text-xs"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* Table */}

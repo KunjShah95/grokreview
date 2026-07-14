@@ -240,19 +240,33 @@ export type DashboardStats = {
   connectedRepos: number;
   reviewsThisMonth: number;
   remainingFree: number;
+  topModel: { model: string; count: number } | null;
 };
 
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const installationId = await getUserInstallationId(userId);
   if (!installationId) {
-    return { totalPRs: 0, reviewedPRs: 0, pendingPRs: 0, connectedRepos: 0, reviewsThisMonth: 0, remainingFree: 5 };
+    return { totalPRs: 0, reviewedPRs: 0, pendingPRs: 0, connectedRepos: 0, reviewsThisMonth: 0, remainingFree: 5, topModel: null };
   }
 
-  const [totalPRs, reviewedPRs, pendingPRs, connectedRepos] = await Promise.all([
+  const [
+    totalPRs,
+    reviewedPRs,
+    pendingPRs,
+    connectedRepos,
+    modelCounts,
+  ] = await Promise.all([
     prisma.pullRequest.count({ where: { installationId } }),
     prisma.pullRequest.count({ where: { installationId, status: "reviewed" } }),
     prisma.pullRequest.count({ where: { installationId, status: "pending" } }),
     prisma.repoSync.count({ where: { installationId } }),
+    prisma.pullRequest.groupBy({
+      by: ["model"],
+      where: { installationId, status: "reviewed", model: { not: null } },
+      _count: { model: true },
+      orderBy: { _count: { model: "desc" } },
+      take: 1,
+    }),
   ]);
 
   const firstOfMonth = new Date();
@@ -267,6 +281,10 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
     },
   });
 
+  const topModel = modelCounts.length > 0
+    ? { model: modelCounts[0].model as string, count: modelCounts[0]._count.model }
+    : null;
+
   return {
     totalPRs,
     reviewedPRs,
@@ -274,5 +292,6 @@ export async function getDashboardStats(userId: string): Promise<DashboardStats>
     connectedRepos,
     reviewsThisMonth,
     remainingFree: Math.max(0, 5 - reviewsThisMonth),
+    topModel,
   };
 }

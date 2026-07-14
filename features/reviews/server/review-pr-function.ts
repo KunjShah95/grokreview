@@ -6,6 +6,7 @@ import { postPrComment } from "./post-pr-comment";
 import { chunkPrFiles } from "../utils/chunk-code";
 import { buildPrNamespace, saveChunksToPinecone, searchPrContext } from "./vector";
 import { buildRepoNamespace } from "@/features/repo-sync/server/repo-sync";
+import { getUserIdByInstallationId } from "@/features/github/server/installation";
 
 export const reviewPullRequest = inngest.createFunction(
   { id: "review-pull-request", triggers: { event: "github/pr.received" } },
@@ -78,6 +79,11 @@ export const reviewPullRequest = inngest.createFunction(
       });
     });
 
+    // Find the user for usage alert tracking
+    const userId = await step.run("find-user", async () => {
+      return getUserIdByInstallationId(pullRequest.installationId);
+    });
+
     // review now contains { text, model }
     await step.run("post-pr-comment", async () => {
       const commentBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}`;
@@ -100,6 +106,14 @@ export const reviewPullRequest = inngest.createFunction(
         },
       });
     });
+
+    // Trigger usage alert check in the background
+    if (userId) {
+      await inngest.send({
+        name: "usage/alert.check",
+        data: { userId },
+      });
+    }
 
     return { pullRequestId, status: "reviewed" };
   }
