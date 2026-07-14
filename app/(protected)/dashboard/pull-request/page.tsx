@@ -41,7 +41,7 @@ export default async function DashboardPullRequestPage() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="rounded-none border border-border p-4 flex flex-col items-center justify-center text-center"
+            className="rounded-xl border border-border p-4 flex flex-col items-center justify-center text-center"
           >
             <span className="text-2xl font-bold tabular-nums tracking-tight">{stat.value}</span>
             <span className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</span>

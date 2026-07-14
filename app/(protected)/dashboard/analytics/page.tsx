@@ -37,14 +37,14 @@ export default async function DashboardAnalyticsPage() {
           label="This Month"
           value={analytics.reviewsThisMonth}
           description="Reviews in current month"
-          color="text-purple-600 dark:text-purple-400"
+          color="text-primary"
         />
         <StatCard
           label="Avg Review Time"
           value={
             analytics.averageReviewTime !== null
               ? `${analytics.averageReviewTime}m`
-              : "—"
+              : "n/a"
           }
           description="From PR open to review"
         />

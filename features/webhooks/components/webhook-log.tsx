@@ -120,13 +120,13 @@ export function WebhookLog({ initialLimit = 50, autoRefresh = false }: WebhookLo
           <Spinner className="size-5" />
         </div>
       ) : events.length === 0 ? (
-        <div className="flex items-center justify-center rounded-none border border-dashed border-border py-12">
+        <div className="flex items-center justify-center rounded-xl border border-dashed border-border py-12">
           <p className="text-xs text-muted-foreground">
             No webhook events received yet. Install the GitHub App and open a PR.
           </p>
         </div>
       ) : (
-        <div className="rounded-none border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

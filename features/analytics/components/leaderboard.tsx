@@ -71,7 +71,7 @@ export function Leaderboard({ data }: LeaderboardProps) {
   );
 
   return (
-    <div className="rounded-none border border-border">
+    <div className="rounded-xl border border-border">
       {/* Header */}
       <div className="border-b border-border p-5">
         <div className="flex items-center justify-between">
@@ -165,7 +165,7 @@ className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/30
                           ? "bg-gray-400"
                           : entry.rank === 3
                           ? "bg-amber-700"
-                          : "bg-purple-500/50"
+                          : "bg-primary/50"
                       }`}
                       style={{ width: `${barWidth}%` }}
                     />

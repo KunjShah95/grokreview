@@ -81,7 +81,7 @@ export function PromptEditor({ repoFullName, initialPrompt, onSave }: PromptEdit
       </div>
 
       {/* Prompt Editor */}
-      <div className="rounded-none border border-border">
+      <div className="rounded-xl border border-border">
         <div className="border-b border-border bg-muted/30 px-4 py-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">

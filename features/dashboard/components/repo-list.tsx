@@ -142,7 +142,7 @@ export function RepoList() {
           onChange={(event) => setSearch(event.target.value)}
         />
       </div>
-      <div className="rounded-none border border-border">
+      <div className="rounded-xl border border-border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -187,7 +187,7 @@ function RepoRow({ repo }: { repo: DashboardRepo }) {
         </span>
       </TableCell>
       <TableCell className="text-muted-foreground">{repo.defaultBranch}</TableCell>
-      <TableCell>{repo.language ?? "—"}</TableCell>
+      <TableCell className="text-muted-foreground">{repo.language ?? "Not set"}</TableCell>
       <TableCell className="text-right">
         <span className="inline-flex items-center justify-end gap-1 text-muted-foreground">
           <StarIcon className="size-3 text-amber-500" />

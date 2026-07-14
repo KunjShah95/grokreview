@@ -144,7 +144,7 @@ export function ReviewHeatmap({ data }: ReviewHeatmapProps) {
 
   if (data.days.length === 0) {
     return (
-      <div className="rounded-none border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <h3 className="text-sm font-medium mb-1">Review Activity</h3>
         <p className="text-xs text-muted-foreground">
           No review data available for the past year. Install the GitHub App and review some PRs to see your activity here.
@@ -157,7 +157,7 @@ export function ReviewHeatmap({ data }: ReviewHeatmapProps) {
   const activeDays = data.days.filter((d) => d.count > 0).length;
 
   return (
-    <div className="rounded-none border border-border p-6">
+    <div className="rounded-xl border border-border p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>

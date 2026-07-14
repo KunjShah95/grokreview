@@ -135,7 +135,7 @@ export function GithubConnectCard({
             <div className="flex items-center gap-3">
               <span
                 className={cn(
-                  "flex size-10 items-center justify-center rounded-none border",
+                  "flex size-10 items-center justify-center rounded-xl border",
                   iconWrapperClass
                 )}
               >

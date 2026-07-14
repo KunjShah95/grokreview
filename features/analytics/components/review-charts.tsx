@@ -17,13 +17,26 @@ import {
 import type { ReviewAnalytics } from "@/features/analytics/server/stats";
 
 const STATUS_COLORS: Record<string, string> = {
-  reviewed: "#22c55e",
-  pending: "#f59e0b",
-  processing: "#3b82f6",
-  rate_limited: "#ef4444",
+  reviewed: "#16a34a",
+  pending: "#d97706",
+  processing: "#4f46e5",
+  rate_limited: "#dc2626",
 };
 
-const CHART_COLORS = ["#8b5cf6", "#22c55e", "#3b82f6", "#f59e0b", "#ef4444"];
+// Indigo-anchored sequence (matches --chart-* tokens), no AI-purple
+const CHART_COLORS = ["#4f46e5", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b"];
+
+// Light chart chrome (page is light-locked)
+const AXIS = "#a1a1aa";
+const GRID = "#ececec";
+const TOOLTIP = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 8,
+  fontSize: 12,
+  boxShadow: "0 8px 24px -12px rgba(30,27,75,0.25)",
+} as const;
+const ACCENT = "#4f46e5";
 
 type ReviewChartsProps = {
   analytics: ReviewAnalytics;
@@ -33,36 +46,31 @@ export function ReviewCharts({ analytics }: ReviewChartsProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
       {/* Reviews Over Time (Line Chart) */}
-      <div className="rounded-none border border-border p-5">
+      <div className="rounded-xl border border-border p-5">
         <h3 className="text-sm font-medium mb-4">Reviews (Last 30 Days)</h3>
         {analytics.reviewsByDay.length > 0 ? (
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={analytics.reviewsByDay}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: AXIS }}
                 tickFormatter={(val) => {
                   const d = new Date(val);
                   return `${d.getMonth() + 1}/${d.getDate()}`;
                 }}
               />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
                 labelFormatter={(val) => new Date(val).toLocaleDateString()}
               />
               <Line
                 type="monotone"
                 dataKey="count"
-                stroke="#8b5cf6"
+                stroke={ACCENT}
                 strokeWidth={2}
-                dot={{ r: 3, fill: "#8b5cf6" }}
+                dot={{ r: 3, fill: ACCENT }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>
@@ -75,7 +83,7 @@ export function ReviewCharts({ analytics }: ReviewChartsProps) {
       </div>
 
       {/* Reviews by Status (Pie Chart) */}
-      <div className="rounded-none border border-border p-5">
+      <div className="rounded-xl border border-border p-5">
         <h3 className="text-sm font-medium mb-4">Reviews by Status</h3>
         {analytics.reviewsByStatus.length > 0 ? (
           <ResponsiveContainer width="100%" height={250}>
@@ -98,12 +106,7 @@ export function ReviewCharts({ analytics }: ReviewChartsProps) {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -129,29 +132,24 @@ export function ReviewCharts({ analytics }: ReviewChartsProps) {
 
       {/* Top Repositories (Bar Chart) */}
       {analytics.topRepositories.length > 0 && (
-        <div className="rounded-none border border-border p-5 md:col-span-2">
+        <div className="rounded-xl border border-border p-5 md:col-span-2">
           <h3 className="text-sm font-medium mb-4">Top Repositories</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={analytics.topRepositories} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: AXIS }} allowDecimals={false} />
               <YAxis
                 type="category"
                 dataKey="repoFullName"
-                tick={{ fontSize: 10 }}
+                tick={{ fontSize: 10, fill: AXIS }}
                 width={200}
                 tickFormatter={(val) => val.split("/")[1] || val}
               />
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
                 labelFormatter={(val) => val}
               />
-              <Bar dataKey="count" fill="#8b5cf6" radius={[0, 2, 2, 0]} />
+              <Bar dataKey="count" fill={ACCENT} radius={[0, 2, 2, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -159,22 +157,17 @@ export function ReviewCharts({ analytics }: ReviewChartsProps) {
 
       {/* Model Usage (Bar Chart) */}
       {analytics.modelUsage.length > 0 && (
-        <div className="rounded-none border border-border p-5 md:col-span-2">
+        <div className="rounded-xl border border-border p-5 md:col-span-2">
           <h3 className="text-sm font-medium mb-4">Model Usage</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={analytics.modelUsage}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="model" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+              <XAxis dataKey="model" tick={{ fontSize: 10, fill: AXIS }} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
               />
-              <Bar dataKey="count" fill="#22c55e" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="count" fill={ACCENT} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -195,9 +188,9 @@ export function StatCard({
   color?: string;
 }) {
   return (
-    <div className="rounded-none border border-border p-5">
+    <div className="rounded-xl border border-border p-5">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className={`text-2xl font-bold tabular-nums tracking-tight ${color || ""}`}>
+      <p className={`text-2xl font-semibold tabular-nums tracking-tight ${color || ""}`}>
         {value}
       </p>
       {description && (

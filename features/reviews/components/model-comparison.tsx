@@ -82,7 +82,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
   return (
     <div className="space-y-6">
       {/* Model Selectors */}
-      <div className="rounded-none border border-border p-5">
+      <div className="rounded-xl border border-border p-5">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium">Multi-Model Comparison</h3>
           <Badge variant="outline" className="text-[10px]">
@@ -117,7 +117,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
             </label>
             <div className="flex gap-2">
               <select
-                className="flex-1 h-8 rounded-none border border-border bg-background px-2 text-xs"
+                className="flex-1 h-8 rounded-lg border border-border bg-background px-2 text-xs"
                 value={modelAProvider}
                 onChange={(e) => {
                   const p = e.target.value as AIProvider;
@@ -132,7 +132,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                 ))}
               </select>
               <select
-                className="flex-1 h-8 rounded-none border border-border bg-background px-2 text-xs"
+                className="flex-1 h-8 rounded-lg border border-border bg-background px-2 text-xs"
                 value={modelAModelId}
                 onChange={(e) => setModelAModelId(e.target.value)}
                 disabled={isLoading}
@@ -162,7 +162,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
             </label>
             <div className="flex gap-2">
               <select
-                className="flex-1 h-8 rounded-none border border-border bg-background px-2 text-xs"
+                className="flex-1 h-8 rounded-lg border border-border bg-background px-2 text-xs"
                 value={modelBProvider}
                 onChange={(e) => {
                   const p = e.target.value as AIProvider;
@@ -177,7 +177,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                 ))}
               </select>
               <select
-                className="flex-1 h-8 rounded-none border border-border bg-background px-2 text-xs"
+                className="flex-1 h-8 rounded-lg border border-border bg-background px-2 text-xs"
                 value={modelBModelId}
                 onChange={(e) => setModelBModelId(e.target.value)}
                 disabled={isLoading}
@@ -228,13 +228,13 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
 
       {/* Loading State */}
       {isLoading && (
-        <div className="rounded-none border border-border p-12">
+        <div className="rounded-xl border border-border p-12">
           <div className="flex flex-col items-center justify-center gap-3">
             <Spinner className="size-6" />
             <p className="text-sm text-muted-foreground">Generating reviews from both models...</p>
             <div className="flex gap-6 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
-                <span className="size-1.5 rounded-full bg-purple-500" />
+                <span className="size-1.5 rounded-full bg-primary" />
                 {result?.modelA?.label || `${modelAProvider}/${modelAModelId}`}
               </span>
               <span className="flex items-center gap-1">
@@ -248,7 +248,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
 
       {/* Error State */}
       {status === "error" && (
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <div className="flex items-center gap-2 text-red-500 mb-2">
             <WarningCircle className="size-4" />
             <span className="text-sm font-medium">Comparison Failed</span>
@@ -265,7 +265,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
       {isDone && result && (
         <div className="space-y-6">
           {/* Speed Comparison */}
-          <div className="rounded-none border border-border p-4">
+          <div className="rounded-xl border border-border p-4">
             <div className="flex items-center gap-4 justify-center text-xs">
               <div className={`flex items-center gap-1.5 ${result.fasterModel === "A" ? "text-emerald-500 font-medium" : "text-muted-foreground"}`}>
                 <Lightning className="size-3" />
@@ -291,16 +291,16 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
           {/* Findings Comparison */}
           <div className="grid gap-6 md:grid-cols-2">
             {/* Unique to A */}
-            <div className="rounded-none border border-purple-500/30 p-5">
+            <div className="rounded-xl border border-primary/30 p-5">
               <div className="flex items-center gap-2 mb-3">
-                <div className="size-2 rounded-full bg-purple-500" />
+                <div className="size-2 rounded-full bg-primary" />
                 <h4 className="text-xs font-medium uppercase tracking-wider">Unique to {result.modelA.label}</h4>
               </div>
               {result.uniqueToA.length > 0 ? (
                 <ul className="space-y-1">
                   {result.uniqueToA.map((finding, i) => (
                     <li key={i} className="text-xs text-muted-foreground flex gap-2">
-                      <span className="text-purple-400 shrink-0">→</span>
+                      <span className="text-primary shrink-0">→</span>
                       <span>{finding.slice(0, 120)}{finding.length > 120 ? "..." : ""}</span>
                     </li>
                   ))}
@@ -311,7 +311,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
             </div>
 
             {/* Unique to B */}
-            <div className="rounded-none border border-emerald-500/30 p-5">
+            <div className="rounded-xl border border-emerald-500/30 p-5">
               <div className="flex items-center gap-2 mb-3">
                 <div className="size-2 rounded-full bg-emerald-500" />
                 <h4 className="text-xs font-medium uppercase tracking-wider">Unique to {result.modelB.label}</h4>
@@ -333,7 +333,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
 
           {/* Common Findings */}
           {result.commonFindings.length > 0 && (
-            <div className="rounded-none border border-blue-500/30 p-5">
+            <div className="rounded-xl border border-blue-500/30 p-5">
               <h4 className="text-xs font-medium uppercase tracking-wider mb-3 flex items-center gap-2">
                 <CheckCircle className="size-3 text-blue-400" />
                 Shared Findings (both models agreed)
@@ -356,7 +356,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
             {/* Model A Full Review */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs font-medium text-purple-500">{result.modelA.label}</h4>
+                <h4 className="text-xs font-medium text-primary">{result.modelA.label}</h4>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -367,7 +367,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                   Copy
                 </Button>
               </div>
-              <div className="rounded-none border border-border bg-muted/20 p-4 max-h-[500px] overflow-y-auto">
+              <div className="rounded-xl border border-border bg-muted/20 p-4 max-h-[500px] overflow-y-auto">
                 <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-muted-foreground">
                   {result.modelA.text}
                 </pre>
@@ -388,7 +388,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                   Copy
                 </Button>
               </div>
-              <div className="rounded-none border border-border bg-muted/20 p-4 max-h-[500px] overflow-y-auto">
+              <div className="rounded-xl border border-border bg-muted/20 p-4 max-h-[500px] overflow-y-auto">
                 <pre className="whitespace-pre-wrap text-xs leading-relaxed font-sans text-muted-foreground">
                   {result.modelB.text}
                 </pre>
@@ -419,7 +419,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
 
       {/* Initial State */}
       {status === "idle" && (
-        <div className="rounded-none border border-dashed border-border p-12">
+        <div className="rounded-xl border border-dashed border-border p-12">
           <div className="text-center">
             <p className="text-sm text-muted-foreground mb-1">Select two models and click Compare</p>
             <p className="text-xs text-muted-foreground">

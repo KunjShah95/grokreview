@@ -86,7 +86,7 @@ export function StreamingReview({
         <div className="flex items-center gap-2 flex-wrap">
           {/* Provider Select */}
           <select
-            className="h-8 rounded-none border border-border bg-background px-2 text-xs"
+            className="h-8 rounded-lg border border-border bg-background px-2 text-xs"
             value={selectedProvider}
             onChange={(e) => {
               const p = e.target.value as AIProvider;
@@ -105,7 +105,7 @@ export function StreamingReview({
 
           {/* Model Select */}
           <select
-            className="h-8 rounded-none border border-border bg-background px-2 text-xs"
+            className="h-8 rounded-lg border border-border bg-background px-2 text-xs"
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
             disabled={isActive}
@@ -183,7 +183,7 @@ export function StreamingReview({
       <Separator />
 
       {/* Streaming Content */}
-      <div className="min-h-[200px] rounded-none border border-border bg-muted/20 p-4">
+      <div className="min-h-[200px] rounded-xl border border-border bg-muted/20 p-4">
         {status === "idle" ? (
           <div className="flex h-full items-center justify-center">
             <p className="text-xs text-muted-foreground">

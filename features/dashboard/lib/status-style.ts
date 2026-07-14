@@ -7,14 +7,14 @@ export const statusBadgeClass = {
   warning:
     "border-amber-500/40 bg-amber-500/15 text-amber-700 dark:text-amber-400",
   danger: "border-red-500/40 bg-red-500/15 text-red-700 dark:text-red-400",
-  info: "border-blue-500/40 bg-blue-500/15 text-blue-700 dark:text-blue-400",
+  info: "border-primary/30 bg-accent text-primary",
   neutral: "border-border bg-muted text-muted-foreground",
 } as const;
 
 /** Button variants for primary actions like "Install" or "Disconnect". */
 export const statusButtonClass = {
   success:
-    "bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-500/50 dark:bg-green-600 dark:hover:bg-green-500",
+    "bg-primary text-primary-foreground hover:bg-primary/90 focus-visible:ring-primary/50",
   danger:
     "border-red-500/50 bg-red-500/10 text-red-700 hover:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20",
   warning:
@@ -33,7 +33,7 @@ export function statusBadge(
   className?: string
 ) {
   return cn(
-    "inline-flex items-center rounded-none border px-2 py-0.5 text-xs font-medium capitalize",
+    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize",
     statusBadgeClass[tone],
     className
   );

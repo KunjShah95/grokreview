@@ -26,7 +26,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
   return (
     <div className="space-y-6 p-6">
       {/* Main Usage Card */}
-      <div className="rounded-none border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-medium">Monthly Usage</h3>
@@ -77,7 +77,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
       </div>
 
       {/* Monthly History Chart */}
-      <div className="rounded-none border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <h3 className="text-sm font-medium mb-4">Monthly Review History</h3>
         {stats.monthlyHistory.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
@@ -106,7 +106,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
       {/* Daily Activity + Model Usage */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Daily Activity Mini Chart */}
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Daily Activity (30 days)</h3>
           {stats.dailyActivity.length > 0 ? (
             <ResponsiveContainer width="100%" height={150}>
@@ -143,7 +143,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
         </div>
 
         {/* Model Usage Breakdown */}
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Model Usage</h3>
           {stats.byModel.length > 0 ? (
             <div className="space-y-3">
@@ -155,7 +155,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-purple-500"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${m.percentage}%` }}
                     />
                   </div>
@@ -172,7 +172,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
 
       {/* Cost Breakdown */}
       {stats.costEstimate.byProvider.length > 0 && (
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Cost Estimate</h3>
           <div className="grid gap-3">
             {stats.costEstimate.byProvider.map((p) => (

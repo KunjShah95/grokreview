@@ -55,7 +55,7 @@ function ReviewComment({ comment, repoFullName, prNumber }: { comment: string | 
 
   return (
     <div className="space-y-2">
-      <div className="rounded-none border border-border bg-muted/30 p-3">
+      <div className="rounded-xl border border-border bg-muted/30 p-3">
         <pre className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground font-sans">
           {displayText}
         </pre>
@@ -172,7 +172,7 @@ export function PRHistoryList({ items, models }: PRHistoryListProps) {
               {modelLabel}
             </Button>
             {modelDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] rounded-none border border-border bg-background shadow-lg">
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] rounded-xl border border-border bg-background shadow-lg">
                 <button
                   className={`w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors ${modelFilter === "all" ? "bg-muted font-medium" : ""}`}
                   onClick={() => { setModelFilter("all"); setModelDropdownOpen(false); }}
@@ -203,7 +203,7 @@ export function PRHistoryList({ items, models }: PRHistoryListProps) {
 
       {/* Table */}
       {filtered.length === 0 ? (
-        <div className="flex flex-1 items-center justify-center rounded-none border border-dashed border-border p-12">
+        <div className="flex flex-1 items-center justify-center rounded-xl border border-dashed border-border p-12">
           <div className="text-center">
             <p className="text-sm text-muted-foreground">
               {items.length === 0
@@ -213,7 +213,7 @@ export function PRHistoryList({ items, models }: PRHistoryListProps) {
           </div>
         </div>
       ) : (
-        <div className="rounded-none border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

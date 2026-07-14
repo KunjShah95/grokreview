@@ -180,6 +180,7 @@ export default function Home() {
           <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
           <a href="#models" className="transition-colors hover:text-foreground">Models</a>
           <a href="#cli" className="transition-colors hover:text-foreground">CLI</a>
+          <Link href="/blog" className="transition-colors hover:text-foreground">Blog</Link>
         </nav>
         <div className="flex items-center gap-3">
           {session?.user ? (
@@ -391,9 +392,11 @@ export default function Home() {
             </span>
             GrokReview
           </div>
-          <p className="text-xs text-muted-foreground">
-            AI pull request reviews with full codebase context.
-          </p>
+          <nav className="flex items-center gap-6 text-xs text-muted-foreground">
+            <Link href="/blog" className="transition-colors hover:text-foreground">Blog</Link>
+            <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
+            <Link href="/sign-in" className="transition-colors hover:text-foreground">Sign in</Link>
+          </nav>
         </div>
       </footer>
     </div>

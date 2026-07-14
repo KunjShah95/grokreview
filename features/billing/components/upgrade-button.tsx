@@ -41,8 +41,8 @@ export function UpgradeButton() {
       const checkout = new window.Razorpay({
         key,
         subscription_id: subscriptionId,
-        name: "Chai Code Reviewer",
-        description: "Pro plan — unlimited AI reviews",
+        name: "GrokReview",
+        description: "Pro plan: unlimited AI reviews",
         handler: () => {
           toast.success("Payment successful! Your Pro plan will activate shortly.");
           router.refresh();

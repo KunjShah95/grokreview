@@ -1,17 +1,20 @@
 # =============================================================================
-# PR Review CI - Automated AI Code Review via GitHub Actions
+# PR Review CI — Automated AI Code Review via GitHub Actions
 # =============================================================================
 #
-# This workflow triggers an AI-powered code review on every pull request.
-# It calls your deployed PR reviewer app's API to generate the review and
-# posts the results as a PR comment.
+# Triggers an AI-powered code review on every pull request. Calls your
+# deployed app's API to generate the review and posts the results as a
+# formal PR check.
 #
-# Setup:
-#   1. Deploy this app to Vercel/Railway/etc.
-#   2. Add repository secret: PR_REVIEWER_URL (e.g. https://pr-review.vercel.app)
-#   3. Set PR_REVIEWER_API_KEY environment variable on your deployment
-#   4. That's it! The workflow sends the GITHUB_TOKEN so the API can fetch
-#      the diff directly — no need to pass large diffs through the workflow.
+# ┌─────────────────────────────────────────────────────────────────────┐
+# │ ⚠️  REQUIRED SECRETS (set in repo → Settings → Secrets → Actions)  │
+# │                                                                     │
+# │  PR_REVIEWER_URL      — Your deployed app URL                       │
+# │                        (e.g. https://grokreview.railway.app)        │
+# │                                                                     │
+# │  PR_REVIEWER_API_KEY  — Matches the env var on your deployment      │
+# │                        The API will reject requests without it.     │
+# └─────────────────────────────────────────────────────────────────────┘
 # =============================================================================
 
 name: AI Code Review
@@ -30,7 +33,6 @@ jobs:
   review:
     name: AI Code Review
     runs-on: ubuntu-latest
-    # Skip bots to avoid noise
     if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
 
     steps:
@@ -38,10 +40,10 @@ jobs:
         id: review
         uses: fjogeleit/http-request-action@v1
         with:
-          # Falls back to localhost for dev testing
-          url: '${{ secrets.PR_REVIEWER_URL || 'http://localhost:3000' }}/api/github/ci-review'
-          method: 'POST'
-          contentType: 'application/json'
+          # PR_REVIEWER_URL must point to your deployed app (see secrets above)
+          url: "${{ secrets.PR_REVIEWER_URL }}/api/github/ci-review"
+          method: "POST"
+          contentType: "application/json"
           customHeaders: >-
             {
               "Authorization": "Bearer ${{ secrets.PR_REVIEWER_API_KEY }}",
@@ -57,15 +59,26 @@ jobs:
             }
 
       - name: Post Review Comment
-        if: steps.review.outcome == 'success'
+        if: steps.review.outcome == 'success' && steps.review.outputs.response != ''
         uses: actions/github-script@v7
+        env:
+          REVIEW_RESPONSE: ${{ steps.review.outputs.response }}
         with:
           script: |
-            const response = ${{ steps.review.outputs.response }};
+            // Safely parse the JSON response (avoids injection issues)
+            let response;
+            try {
+              response = JSON.parse(process.env.REVIEW_RESPONSE);
+            } catch (e) {
+              console.log('Failed to parse review response:', e.message);
+              return;
+            }
+
             if (!response || response.error) {
               console.log('Review failed:', response?.error);
               return;
             }
+
             const body = response.review || 'AI review completed.';
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -77,22 +90,30 @@ jobs:
       - name: Set Check Status
         if: always()
         uses: actions/github-script@v7
+        env:
+          REVIEW_RESPONSE: ${{ steps.review.outputs.response }}
         with:
           script: |
-            const response = ${{ steps.review.outputs.response }};
             let conclusion = 'neutral';
             let summary = 'Review could not be completed.';
 
-            if (response) {
-              if (response.status === 'reviewed') {
-                conclusion = 'success';
-                summary = response.summary || 'Review completed successfully.';
-              } else if (response.status === 'failed') {
-                conclusion = 'failure';
-                summary = response.error || 'Review failed.';
-              } else if (response.status === 'no_changes') {
-                conclusion = 'skipped';
-                summary = 'No code changes to review.';
+            if (process.env.REVIEW_RESPONSE) {
+              try {
+                const response = JSON.parse(process.env.REVIEW_RESPONSE);
+                if (response) {
+                  if (response.status === 'reviewed') {
+                    conclusion = 'success';
+                    summary = response.summary || 'Review completed successfully.';
+                  } else if (response.status === 'failed') {
+                    conclusion = 'failure';
+                    summary = response.error || 'Review failed.';
+                  } else if (response.status === 'no_changes') {
+                    conclusion = 'skipped';
+                    summary = 'No code changes to review.';
+                  }
+                }
+              } catch (e) {
+                console.log('Could not parse review response for status check:', e.message);
               }
             }
 
@@ -106,6 +127,6 @@ jobs:
               output: {
                 title: 'AI Code Review',
                 summary: summary.substring(0, 200),
-                text: response?.review?.substring(0, 60000) || summary
+                text: summary.substring(0, 60000)
               }
             });
