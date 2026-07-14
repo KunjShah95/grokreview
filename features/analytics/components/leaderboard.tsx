@@ -118,6 +118,7 @@ className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/30
                 {/* Avatar */}
                 <div className="size-7 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                   {entry.authorLogin ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={`https://github.com/${entry.authorLogin}.png?size=40`}
                       alt={`@${entry.authorLogin}`}
