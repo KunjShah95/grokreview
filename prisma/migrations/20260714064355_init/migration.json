@@ -1,0 +1,86 @@
+{
+  "version": "7.8",
+  "steps": [
+    {
+      "tag": "CreateSchema",
+      "schemaName": "public"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "Test"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "user"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "github_installation"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "pull_request"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "repo_sync"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "session"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "account"
+    },
+    {
+      "tag": "CreateTable",
+      "tableName": "verification"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "user_email_key"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "github_installation_userId_key"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "pull_request_repoFullName_prNumber_key"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "repo_sync_repoFullName_key"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "session_userId_idx"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "session_token_key"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "account_userId_idx"
+    },
+    {
+      "tag": "CreateIndex",
+      "indexName": "verification_identifier_idx"
+    },
+    {
+      "tag": "AddForeignKey",
+      "constraintName": "github_installation_userId_fkey"
+    },
+    {
+      "tag": "AddForeignKey",
+      "constraintName": "session_userId_fkey"
+    },
+    {
+      "tag": "AddForeignKey",
+      "constraintName": "account_userId_fkey"
+    }
+  ],
+  "rolledBackSteps": []
+}

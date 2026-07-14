@@ -1,0 +1,11 @@
+{
+  "version": "7.8",
+  "steps": [
+    {
+      "tag": "AddColumn",
+      "columnName": "model",
+      "tableName": "pull_request"
+    }
+  ],
+  "rolledBackSteps": []
+}

@@ -1,0 +1,96 @@
+import { prisma } from "@/lib/db";
+import { getUserInstallationId } from "@/features/github/server/installation";
+
+export type PRReviewHistoryItem = {
+  id: string;
+  installationId: number;
+  repoFullName: string;
+  prNumber: number;
+  title: string;
+  authorLogin: string | null;
+  headSha: string;
+  baseBranch: string;
+  status: string;
+  model: string | null;
+  reviewComment: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PRHistoryFilters = {
+  status?: string;
+  repo?: string;
+  search?: string;
+};
+
+export async function getPRReviewHistory(
+  userId: string,
+  filters?: PRHistoryFilters
+): Promise<PRReviewHistoryItem[]> {
+  // Get the user's GitHub installation to find their PRs
+  const installationId = await getUserInstallationId(userId);
+  if (!installationId) {
+    return [];
+  }
+
+  const where: Record<string, unknown> = {
+    installationId,
+  };
+
+  if (filters?.status && filters.status !== "all") {
+    where.status = filters.status;
+  }
+
+  if (filters?.repo) {
+    where.repoFullName = { contains: filters.repo, mode: "insensitive" };
+  }
+
+  if (filters?.search) {
+    where.OR = [
+      { title: { contains: filters.search, mode: "insensitive" } },
+      { repoFullName: { contains: filters.search, mode: "insensitive" } },
+      { authorLogin: { contains: filters.search, mode: "insensitive" } },
+    ];
+  }
+
+  const prs = await prisma.pullRequest.findMany({
+    where,
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  });
+
+  return prs.map((pr) => ({
+    id: pr.id,
+    installationId: pr.installationId,
+    repoFullName: pr.repoFullName,
+    prNumber: pr.prNumber,
+    title: pr.title,
+    authorLogin: pr.authorLogin,
+    headSha: pr.headSha,
+    baseBranch: pr.baseBranch,
+    status: pr.status,
+    model: pr.model,
+    reviewComment: pr.reviewComment,
+    reviewedAt: pr.reviewedAt?.toISOString() ?? null,
+    createdAt: pr.createdAt.toISOString(),
+    updatedAt: pr.updatedAt.toISOString(),
+  }));
+}
+
+export async function getPRReviewStats(userId: string) {
+  const installationId = await getUserInstallationId(userId);
+  if (!installationId) {
+    return { total: 0, reviewed: 0, pending: 0, processing: 0, rateLimited: 0 };
+  }
+
+  const [total, reviewed, pending, processing, rateLimited] = await Promise.all([
+    prisma.pullRequest.count({ where: { installationId } }),
+    prisma.pullRequest.count({ where: { installationId, status: "reviewed" } }),
+    prisma.pullRequest.count({ where: { installationId, status: "pending" } }),
+    prisma.pullRequest.count({ where: { installationId, status: "processing" } }),
+    prisma.pullRequest.count({ where: { installationId, status: "rate_limited" } }),
+  ]);
+
+  return { total, reviewed, pending, processing, rateLimited };
+}

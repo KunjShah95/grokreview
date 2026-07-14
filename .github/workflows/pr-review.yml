@@ -1,0 +1,111 @@
+# =============================================================================
+# PR Review CI - Automated AI Code Review via GitHub Actions
+# =============================================================================
+#
+# This workflow triggers an AI-powered code review on every pull request.
+# It calls your deployed PR reviewer app's API to generate the review and
+# posts the results as a PR comment.
+#
+# Setup:
+#   1. Deploy this app to Vercel/Railway/etc.
+#   2. Add repository secret: PR_REVIEWER_URL (e.g. https://pr-review.vercel.app)
+#   3. Set PR_REVIEWER_API_KEY environment variable on your deployment
+#   4. That's it! The workflow sends the GITHUB_TOKEN so the API can fetch
+#      the diff directly — no need to pass large diffs through the workflow.
+# =============================================================================
+
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main, master, develop]
+
+# Allow one concurrent review per PR
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    # Skip bots to avoid noise
+    if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
+
+    steps:
+      - name: Request AI Review
+        id: review
+        uses: fjogeleit/http-request-action@v1
+        with:
+          # Falls back to localhost for dev testing
+          url: '${{ secrets.PR_REVIEWER_URL || 'http://localhost:3000' }}/api/github/ci-review'
+          method: 'POST'
+          contentType: 'application/json'
+          customHeaders: >-
+            {
+              "Authorization": "Bearer ${{ secrets.PR_REVIEWER_API_KEY }}",
+              "X-GitHub-Token": "${{ secrets.GITHUB_TOKEN }}"
+            }
+          data: >-
+            {
+              "owner": "${{ github.repository_owner }}",
+              "repo": "${{ github.event.repository.name }}",
+              "prNumber": ${{ github.event.pull_request.number }},
+              "title": "${{ github.event.pull_request.title }}",
+              "headSha": "${{ github.sha }}"
+            }
+
+      - name: Post Review Comment
+        if: steps.review.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = ${{ steps.review.outputs.response }};
+            if (!response || response.error) {
+              console.log('Review failed:', response?.error);
+              return;
+            }
+            const body = response.review || 'AI review completed.';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🤖 GrokReview\n\n**Model:** ${response.model || 'default'}\n\n${body}\n\n---\n*Powered by GrokReview*`
+            });
+
+      - name: Set Check Status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = ${{ steps.review.outputs.response }};
+            let conclusion = 'neutral';
+            let summary = 'Review could not be completed.';
+
+            if (response) {
+              if (response.status === 'reviewed') {
+                conclusion = 'success';
+                summary = response.summary || 'Review completed successfully.';
+              } else if (response.status === 'failed') {
+                conclusion = 'failure';
+                summary = response.error || 'Review failed.';
+              } else if (response.status === 'no_changes') {
+                conclusion = 'skipped';
+                summary = 'No code changes to review.';
+              }
+            }
+
+            github.rest.checks.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'AI Code Review',
+              head_sha: context.sha,
+              status: 'completed',
+              conclusion: conclusion,
+              output: {
+                title: 'AI Code Review',
+                summary: summary.substring(0, 200),
+                text: response?.review?.substring(0, 60000) || summary
+              }
+            });
