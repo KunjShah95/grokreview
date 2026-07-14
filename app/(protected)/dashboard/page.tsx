@@ -1,6 +1,9 @@
 import { requireAuth } from "@/features/auth/actions";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { getDashboardStats } from "@/features/analytics/server/stats";
+import { getOnboardingStatus } from "@/features/onboarding/server/check";
+import { SetupChecklist } from "@/features/onboarding/components/setup-checklist";
+import { getGithubInstallUrl } from "@/features/github/utils/github-app";
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
@@ -19,7 +22,10 @@ export const metadata: Metadata = {
 const Dashboard = async () => {
   const session = await requireAuth();
   const user = session.user as { id: string; name: string; email: string; image?: string | null; plan?: string };
-  const stats = await getDashboardStats(user.id);
+  const [stats, onboarding] = await Promise.all([
+    getDashboardStats(user.id),
+    getOnboardingStatus(user.id),
+  ]);
 
   const topPct =
     stats.topModel && stats.reviewedPRs > 0
@@ -66,6 +72,8 @@ const Dashboard = async () => {
     { href: "/dashboard/analytics", title: "Analytics", body: "Review trends, model usage, and insights." },
     { href: "/dashboard/github", title: "GitHub App", body: "Manage installation, repos, and permissions." },
   ];
+
+  const installUrl = getGithubInstallUrl(user.id);
 
   return (
     <>
@@ -139,27 +147,17 @@ const Dashboard = async () => {
           </div>
         )}
 
-        {/* Empty state */}
-        {stats.totalPRs === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-border p-12 text-center">
-            <span className="flex size-11 items-center justify-center rounded-xl bg-accent text-primary">
-              <GitPullRequest className="size-5" weight="bold" />
-            </span>
-            <p className="mt-4 text-sm font-medium">No pull requests reviewed yet</p>
-            <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-              Install the GitHub App and open a PR on any connected repository. The
-              review appears here automatically.
-            </p>
-            <Link
-              href="/dashboard/github"
-              className="mt-5 inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-medium text-primary-foreground transition-transform active:translate-y-px"
-            >
-              Install GitHub App
-              <ArrowRight className="size-3.5" weight="bold" />
-            </Link>
-          </div>
-        ) : (
-          /* Quick actions */
+        {/* Onboarding checklist (hides itself when complete) */}
+        <SetupChecklist
+          githubConnected={onboarding.githubConnected}
+          hasReviews={onboarding.hasReviews}
+          completedSteps={onboarding.completedSteps}
+          totalSteps={onboarding.totalSteps}
+          installUrl={installUrl}
+        />
+
+        {/* Quick actions (shown after first review or when setup done) */}
+        {stats.totalPRs > 0 && (
           <div className="grid gap-3 md:grid-cols-3">
             {actions.map((a) => (
               <Link
