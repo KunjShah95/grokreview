@@ -21,7 +21,7 @@ type DashboardSidebarProps = {
   plan?: string;
 };
 
-export function DashboardSidebar({ user, plan = "Free" }: DashboardSidebarProps) {
+export function DashboardSidebar({ plan = "Free" }: DashboardSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>

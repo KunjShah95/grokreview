@@ -8,7 +8,6 @@
 import { streamText } from "ai";
 import type { AIProvider } from "./types";
 import { getModel } from "./registry";
-import { ollamaGenerate } from "./providers/ollama";
 import { isOllamaRunning } from "./providers/ollama";
 
 export type StreamEvent = {
@@ -137,7 +136,7 @@ export function streamReviewToReadableStream(
           const line = `data: ${JSON.stringify(event)}\n\n`;
           controller.enqueue(new TextEncoder().encode(line));
         }
-      } catch (error) {
+      } catch {
         const errorEvent = `data: ${JSON.stringify({ type: "error", data: "Stream error" })}\n\n`;
         controller.enqueue(new TextEncoder().encode(errorEvent));
       } finally {

@@ -30,12 +30,13 @@ const eslintConfig = [
     },
   },
 
-  // Ignore generated files
+  // Ignore generated files and separate package dirs
   {
     ignores: [
       ".next/**",
       "node_modules/**",
       "lib/generated/**",
+      "cli/**",
     ],
   },
 ];

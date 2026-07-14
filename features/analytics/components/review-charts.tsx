@@ -23,9 +23,6 @@ const STATUS_COLORS: Record<string, string> = {
   rate_limited: "#dc2626",
 };
 
-// Indigo-anchored sequence (matches --chart-* tokens), no AI-purple
-const CHART_COLORS = ["#4f46e5", "#6366f1", "#0ea5e9", "#10b981", "#f59e0b"];
-
 // Light chart chrome (page is light-locked)
 const AXIS = "#a1a1aa";
 const GRID = "#ececec";

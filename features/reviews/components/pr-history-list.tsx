@@ -41,7 +41,7 @@ const STATUS_STYLES: Record<string, { label: string; variant: "secondary" | "def
 
 const TRUNCATE_LENGTH = 300;
 
-function ReviewComment({ comment, repoFullName, prNumber }: { comment: string | null; repoFullName: string; prNumber: number }) {
+function ReviewComment({ comment }: { comment: string | null; repoFullName: string; prNumber: number }) {
   const [expanded, setExpanded] = useState(false);
 
   if (!comment) {

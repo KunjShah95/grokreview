@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WarningCircle, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import type { WebhookEvent } from "@/features/webhooks/types";
 
 const STATUS_STYLES: Record<string, { label: string; variant: "secondary" | "default" | "destructive" | "outline"; icon: typeof CheckCircle }> = {

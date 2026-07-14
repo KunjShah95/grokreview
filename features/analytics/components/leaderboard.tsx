@@ -15,12 +15,6 @@ const MEDAL_COLORS = [
   "text-amber-700",       // 3rd: Bronze
 ];
 
-const MEDAL_BG = [
-  "bg-yellow-500/10 border-yellow-500/30",
-  "bg-gray-400/10 border-gray-400/30",
-  "bg-amber-700/10 border-amber-700/30",
-];
-
 function MedalIcon({ rank }: { rank: number }) {
   if (rank > 3) return null;
   return <Trophy className={`size-3.5 ${MEDAL_COLORS[rank - 1]}`} weight="fill" />;

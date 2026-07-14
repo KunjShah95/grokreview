@@ -63,7 +63,7 @@ function extractSummary(reviewText: string): string {
  * the review text.
  */
 export async function handleCIReview(input: CIReviewInput): Promise<CIReviewResult> {
-  const { owner, repo, prNumber, title, headSha, githubToken } = input;
+  const { owner, repo, prNumber, title, githubToken } = input;
 
   // Initialize Octokit with the GITHUB_TOKEN from the Actions workflow
   const octokit = new Octokit({ auth: githubToken });
