@@ -87,6 +87,9 @@ export const reviewPullRequest = inngest.createFunction(
 
     // review now contains { text, model }
     await step.run("submit-formal-review", async () => {
+      if (!review) {
+        throw new Error("No review content was generated.");
+      }
       const reviewBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}`;
       try {
         await submitFormalReview(

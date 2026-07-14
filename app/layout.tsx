@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev";
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev").replace(/\/$/, "");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

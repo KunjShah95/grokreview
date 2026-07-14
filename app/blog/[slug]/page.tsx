@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { POSTS, getPost, formatPostDate, type Block } from "@/lib/blog";
 import { ArrowLeft, ArrowRight } from "@phosphor-icons/react/dist/ssr";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev";
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev").replace(/\/$/, "");
 
 type Params = { params: Promise<{ slug: string }> };
 

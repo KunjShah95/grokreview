@@ -48,7 +48,6 @@ jobs:
 
       - name: Lint
         run: npm run lint -- --max-warnings 0
-        continue-on-error: true
 
       - name: Run tests
         run: npm test
@@ -134,7 +133,7 @@ jobs:
             }
 
             if (url) {
-              github.rest.repos.createCommitComment({
+              await github.rest.repos.createCommitComment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 commit_sha: context.sha,

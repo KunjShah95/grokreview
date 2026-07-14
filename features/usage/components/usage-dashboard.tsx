@@ -13,6 +13,17 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { DetailedUsageStats } from "@/features/usage/server/usage-stats";
+
+const AXIS = "#a1a1aa";
+const GRID = "#ececec";
+const ACCENT = "#4f46e5";
+const TOOLTIP = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 8,
+  fontSize: 12,
+  boxShadow: "0 8px 24px -12px rgba(30,27,75,0.25)",
+} as const;
 type UsageDashboardProps = {
   stats: DetailedUsageStats;
 };
@@ -82,18 +93,13 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
         {stats.monthlyHistory.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stats.monthlyHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: AXIS }} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
               />
-              <Bar dataKey="count" fill="#8b5cf6" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="count" fill={ACCENT} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -118,18 +124,13 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
                 />
                 <YAxis hide />
                 <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 0,
-                    fontSize: 11,
-                  }}
+                  contentStyle={TOOLTIP}
                   labelFormatter={(val) => format(parseISO(val), "MMM d, yyyy")}
                 />
                 <Line
                   type="monotone"
                   dataKey="count"
-                  stroke="#22c55e"
+                  stroke={ACCENT}
                   strokeWidth={2}
                   dot={false}
                 />

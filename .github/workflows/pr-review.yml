@@ -85,7 +85,7 @@ jobs:
             }
 
             const body = response.review || 'AI review completed.';
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -122,7 +122,7 @@ jobs:
               }
             }
 
-            github.rest.checks.create({
+            await github.rest.checks.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               name: 'AI Code Review',

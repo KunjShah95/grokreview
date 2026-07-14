@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { POSTS } from "@/lib/blog";
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev";
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev").replace(/\/$/, "");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [

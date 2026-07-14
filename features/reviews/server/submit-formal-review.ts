@@ -23,7 +23,11 @@ export async function submitFormalReview(
 ) {
   const app = getGithubApp();
   const octokit = await app.getInstallationOctokit(installationId);
-  const [owner, repo] = repoFullName.split("/");
+  const parts = repoFullName.split("/");
+  if (parts.length !== 2) {
+    throw new Error(`Invalid repository name: ${repoFullName} — expected owner/repo format`);
+  }
+  const [owner, repo] = parts;
 
   const { data } = await octokit.request(
     "POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews",
