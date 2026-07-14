@@ -74,7 +74,6 @@ export async function handleGithubWebhook(request: Request) {
 
   const event = JSON.parse(payload) as PullRequestWebhookPayload;
   const repoFullName = event.repository.full_name;
-  const action = event.action;
 
   // Webhook event log for non-reviewable actions
   if (!REVIEWABLE_ACTIONS.includes(event.action)) {

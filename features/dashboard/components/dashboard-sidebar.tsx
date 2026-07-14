@@ -21,7 +21,7 @@ type DashboardSidebarProps = {
   plan?: string;
 };
 
-export function DashboardSidebar({ user, plan = "Free" }: DashboardSidebarProps) {
+export function DashboardSidebar({ plan = "Free" }: DashboardSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -32,7 +32,7 @@ export function DashboardSidebar({ user, plan = "Free" }: DashboardSidebarProps)
               tooltip="GrokReview"
               render={
                 <Link href={DASHBOARD_ROUTES.overview}>
-                  <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-none bg-sidebar">
+                  <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-sidebar">
                     <Image
                       src="/logo2.svg"
                       alt=""

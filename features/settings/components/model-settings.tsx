@@ -97,7 +97,7 @@ export function ModelSettings() {
             return (
               <div
                 key={provider}
-                className="rounded-none border border-border p-5 space-y-3"
+                className="rounded-xl border border-border p-5 space-y-3"
               >
                 <div className="flex items-center justify-between">
                   <div>
@@ -167,7 +167,7 @@ export function ModelSettings() {
         </div>
 
         {/* Ollama Quick Start */}
-        <div className="rounded-none border border-border bg-muted/30 p-4">
+        <div className="rounded-xl border border-border bg-muted/30 p-4">
           <h4 className="text-sm font-medium mb-2">📍 Ollama Quick Start</h4>
           <pre className="text-xs text-muted-foreground bg-muted p-3 overflow-x-auto">
             {`# Install Ollama

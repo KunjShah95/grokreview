@@ -123,12 +123,12 @@ function SubscriptionTab({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className={cn(
-          "flex flex-wrap items-center justify-between gap-4 rounded-none border p-4",
+          "flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4",
           isActive ? "border-green-500/30 bg-green-500/5" : "border-border bg-muted/30"
         )}>
           <div>
             <p className={cn("font-medium", planTextClass)}>{planDetails.label} plan</p>
-            <p className="text-xs text-muted-foreground">Status: <span className="text-green-700 dark:text-green-400">{statusLabel}</span></p>
+            <p className="text-xs text-muted-foreground">Status: <span className={cn("font-medium capitalize", isActive ? "text-green-700 dark:text-green-400" : "text-foreground")}>{statusLabel}</span></p>
             {renewalDate ? <p className="text-xs text-muted-foreground">Renews {renewalDate}</p> : null}
           </div>
           <span className={statusBadge(badgeTone)}>{planDetails.label}</span>

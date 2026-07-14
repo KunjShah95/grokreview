@@ -1,5 +1,9 @@
 # 🚀 GrokReview
 
+[![CI/CD](https://github.com/KunjShah95/grokreview/actions/workflows/ci.yml/badge.svg)](https://github.com/KunjShah95/grokreview/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/KunjShah95/grokreview?logo=github)](https://github.com/KunjShah95/grokreview/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 > **AI-powered Pull Request reviews. Use any model, any provider, any workflow.**
 
 GrokReview is a next-generation code review platform that connects to your GitHub repositories and automatically reviews every pull request using AI. It supports **5 AI providers** (Groq, Mistral, HuggingFace, OpenRouter, Ollama), has a **streaming SSE review engine**, **GitHub Actions CI integration**, an **analytics dashboard with heatmaps**, a **multi-model comparison tool**, and a full-featured **CLI**.

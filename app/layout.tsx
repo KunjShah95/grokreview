@@ -16,9 +16,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://grokreview.dev").replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  title: "GrokReview - AI code review that reads your whole repo",
-  description: "GrokReview reviews every pull request the moment it opens, with full codebase context. Bring your own model: Groq, Mistral, OpenRouter, HuggingFace, or local Ollama. No lock-in.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "GrokReview - AI code review that reads your whole repo",
+    template: "%s · GrokReview",
+  },
+  description:
+    "GrokReview reviews every pull request the moment it opens, with full codebase context. Bring your own model: Groq, Mistral, OpenRouter, HuggingFace, or local Ollama. No lock-in.",
+  keywords: [
+    "AI code review",
+    "pull request review",
+    "GitHub code review",
+    "automated PR review",
+    "codebase-aware review",
+    "Groq",
+    "Ollama",
+    "OpenRouter",
+  ],
+  authors: [{ name: "GrokReview" }],
+  applicationName: "GrokReview",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: "GrokReview",
+    title: "GrokReview - AI code review that reads your whole repo",
+    description:
+      "Reviews every pull request the moment it opens, with full codebase context. Bring your own model. No lock-in.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GrokReview - AI code review that reads your whole repo",
+    description:
+      "Reviews every pull request the moment it opens, with full codebase context. Bring your own model. No lock-in.",
+  },
 };
 
 export default function RootLayout({

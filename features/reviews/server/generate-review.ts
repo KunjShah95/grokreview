@@ -1,5 +1,5 @@
 import { generateWithProvider, getDefaultModel } from "@/features/ai";
-import type { AIProvider, UserModelPreference } from "@/features/ai";
+import type { UserModelPreference } from "@/features/ai";
 
 const SYSTEM_PROMPT = `You are an expert code reviewer with deep knowledge of software engineering best practices, security, and performance optimization.
 Review the provided unified diff chunks and write a concise, actionable pull request review in markdown.

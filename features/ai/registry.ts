@@ -7,8 +7,8 @@
  */
 
 import { generateText } from "ai";
-import type { AIProvider, AIModel, UserModelPreference } from "./types";
-import { DEFAULT_MODEL, AVAILABLE_MODELS } from "./types";
+import type { AIProvider, UserModelPreference } from "./types";
+import { DEFAULT_MODEL } from "./types";
 import { getOpenRouterModel } from "./providers/openrouter";
 import { getGroqModel } from "./providers/groq";
 import { getMistralModel } from "./providers/mistral";

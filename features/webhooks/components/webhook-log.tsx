@@ -13,7 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { WarningCircle, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { CheckCircle, XCircle } from "@phosphor-icons/react";
 import type { WebhookEvent } from "@/features/webhooks/types";
 
 const STATUS_STYLES: Record<string, { label: string; variant: "secondary" | "default" | "destructive" | "outline"; icon: typeof CheckCircle }> = {
@@ -120,13 +120,13 @@ export function WebhookLog({ initialLimit = 50, autoRefresh = false }: WebhookLo
           <Spinner className="size-5" />
         </div>
       ) : events.length === 0 ? (
-        <div className="flex items-center justify-center rounded-none border border-dashed border-border py-12">
+        <div className="flex items-center justify-center rounded-xl border border-dashed border-border py-12">
           <p className="text-xs text-muted-foreground">
             No webhook events received yet. Install the GitHub App and open a PR.
           </p>
         </div>
       ) : (
-        <div className="rounded-none border border-border overflow-hidden">
+        <div className="rounded-xl border border-border overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow>

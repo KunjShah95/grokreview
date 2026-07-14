@@ -1,14 +1,19 @@
 {
   "name": "grokreview-cli",
   "version": "0.1.0",
-  "description": "GrokReview CLI - AI-powered GitHub PR reviews. Supports Groq, Mistral, HuggingFace, OpenRouter, and local Ollama models.",
+  "description": "GrokReview CLI - AI-powered GitHub PR reviews from your terminal. Bring your own model: Groq, Mistral, HuggingFace, OpenRouter, or local Ollama.",
   "type": "module",
   "bin": {
-    "pr-review": "./dist/index.js"
+    "pr-review": "dist/index.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/index.ts",
@@ -16,28 +21,46 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^4.0.10",
+    "@ai-sdk/huggingface": "^2.0.9",
+    "@ai-sdk/mistral": "^4.0.10",
+    "@ai-sdk/openai": "^4.0.13",
+    "ai": "^6.0.205",
+    "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "octokit": "^5.0.5",
-    "ai": "^6.0.205",
-    "@ai-sdk/groq": "^1.0.0",
-    "@ai-sdk/mistral": "^1.0.0",
-    "@ai-sdk/huggingface": "^1.0.0",
-    "@ai-sdk/openai": "^1.0.0",
-    "chalk": "^5.3.0",
     "ora": "^8.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
+    "@types/node": "^20.14.0",
     "tsx": "^4.16.0",
-    "@types/node": "^20.14.0"
+    "typescript": "^5.5.0"
   },
   "keywords": [
     "pr-review",
     "code-review",
     "github",
     "ai",
+    "ai-code-review",
+    "pull-request",
     "groq",
+    "mistral",
     "ollama",
+    "openrouter",
     "cli"
-  ]
+  ],
+  "author": "Kunj Shah",
+  "license": "MIT",
+  "homepage": "https://github.com/KunjShah95/grokreview#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KunjShah95/grokreview.git",
+    "directory": "cli"
+  },
+  "bugs": {
+    "url": "https://github.com/KunjShah95/grokreview/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

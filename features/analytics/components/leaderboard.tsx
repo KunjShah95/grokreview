@@ -15,12 +15,6 @@ const MEDAL_COLORS = [
   "text-amber-700",       // 3rd: Bronze
 ];
 
-const MEDAL_BG = [
-  "bg-yellow-500/10 border-yellow-500/30",
-  "bg-gray-400/10 border-gray-400/30",
-  "bg-amber-700/10 border-amber-700/30",
-];
-
 function MedalIcon({ rank }: { rank: number }) {
   if (rank > 3) return null;
   return <Trophy className={`size-3.5 ${MEDAL_COLORS[rank - 1]}`} weight="fill" />;
@@ -71,7 +65,7 @@ export function Leaderboard({ data }: LeaderboardProps) {
   );
 
   return (
-    <div className="rounded-none border border-border">
+    <div className="rounded-xl border border-border">
       {/* Header */}
       <div className="border-b border-border p-5">
         <div className="flex items-center justify-between">
@@ -124,6 +118,7 @@ className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/30
                 {/* Avatar */}
                 <div className="size-7 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                   {entry.authorLogin ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={`https://github.com/${entry.authorLogin}.png?size=40`}
                       alt={`@${entry.authorLogin}`}
@@ -165,7 +160,7 @@ className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted/30
                           ? "bg-gray-400"
                           : entry.rank === 3
                           ? "bg-amber-700"
-                          : "bg-purple-500/50"
+                          : "bg-primary/50"
                       }`}
                       style={{ width: `${barWidth}%` }}
                     />

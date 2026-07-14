@@ -1,7 +1,8 @@
 import { inngest } from "@/features/inngest/client";
 import { prisma } from "@/lib/db";
-import { formatPrFilesForReview, getPullRequestFiles } from "./pr-files";
+import { getPullRequestFiles } from "./pr-files";
 import { generateReview } from "./generate-review";
+import { submitFormalReview } from "./submit-formal-review";
 import { postPrComment } from "./post-pr-comment";
 import { chunkPrFiles } from "../utils/chunk-code";
 import { buildPrNamespace, saveChunksToPinecone, searchPrContext } from "./vector";
@@ -85,14 +86,31 @@ export const reviewPullRequest = inngest.createFunction(
     });
 
     // review now contains { text, model }
-    await step.run("post-pr-comment", async () => {
-      const commentBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}`;
-      await postPrComment(
-        pullRequest.installationId,
-        pullRequest.repoFullName,
-        pullRequest.prNumber,
-        commentBody
-      );
+    await step.run("submit-formal-review", async () => {
+      if (!review) {
+        throw new Error("No review content was generated.");
+      }
+      const reviewBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}`;
+      try {
+        await submitFormalReview(
+          pullRequest.installationId,
+          pullRequest.repoFullName,
+          pullRequest.prNumber,
+          reviewBody,
+          "COMMENT"
+        );
+      } catch (error) {
+        console.warn(
+          "[Review] Formal review API failed, falling back to comment:",
+          (error as Error).message
+        );
+        await postPrComment(
+          pullRequest.installationId,
+          pullRequest.repoFullName,
+          pullRequest.prNumber,
+          reviewBody
+        );
+      }
     });
 
     await step.run("mark-reviewed", async () => {

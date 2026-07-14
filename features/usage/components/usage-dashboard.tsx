@@ -13,6 +13,17 @@ import {
   CartesianGrid,
 } from "recharts";
 import type { DetailedUsageStats } from "@/features/usage/server/usage-stats";
+
+const AXIS = "#a1a1aa";
+const GRID = "#ececec";
+const ACCENT = "#4f46e5";
+const TOOLTIP = {
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  borderRadius: 8,
+  fontSize: 12,
+  boxShadow: "0 8px 24px -12px rgba(30,27,75,0.25)",
+} as const;
 type UsageDashboardProps = {
   stats: DetailedUsageStats;
 };
@@ -26,7 +37,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
   return (
     <div className="space-y-6 p-6">
       {/* Main Usage Card */}
-      <div className="rounded-none border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-medium">Monthly Usage</h3>
@@ -77,23 +88,18 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
       </div>
 
       {/* Monthly History Chart */}
-      <div className="rounded-none border border-border p-6">
+      <div className="rounded-xl border border-border p-6">
         <h3 className="text-sm font-medium mb-4">Monthly Review History</h3>
         {stats.monthlyHistory.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stats.monthlyHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-              <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
+              <XAxis dataKey="month" tick={{ fontSize: 10, fill: AXIS }} />
+              <YAxis tick={{ fontSize: 10, fill: AXIS }} allowDecimals={false} />
               <Tooltip
-                contentStyle={{
-                  background: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 0,
-                  fontSize: 12,
-                }}
+                contentStyle={TOOLTIP}
               />
-              <Bar dataKey="count" fill="#8b5cf6" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="count" fill={ACCENT} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -106,7 +112,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
       {/* Daily Activity + Model Usage */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Daily Activity Mini Chart */}
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Daily Activity (30 days)</h3>
           {stats.dailyActivity.length > 0 ? (
             <ResponsiveContainer width="100%" height={150}>
@@ -118,18 +124,13 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
                 />
                 <YAxis hide />
                 <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--background))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: 0,
-                    fontSize: 11,
-                  }}
+                  contentStyle={TOOLTIP}
                   labelFormatter={(val) => format(parseISO(val), "MMM d, yyyy")}
                 />
                 <Line
                   type="monotone"
                   dataKey="count"
-                  stroke="#22c55e"
+                  stroke={ACCENT}
                   strokeWidth={2}
                   dot={false}
                 />
@@ -143,7 +144,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
         </div>
 
         {/* Model Usage Breakdown */}
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Model Usage</h3>
           {stats.byModel.length > 0 ? (
             <div className="space-y-3">
@@ -155,7 +156,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
                   </div>
                   <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-purple-500"
+                      className="h-full rounded-full bg-primary"
                       style={{ width: `${m.percentage}%` }}
                     />
                   </div>
@@ -172,7 +173,7 @@ export function UsageDashboard({ stats }: UsageDashboardProps) {
 
       {/* Cost Breakdown */}
       {stats.costEstimate.byProvider.length > 0 && (
-        <div className="rounded-none border border-border p-6">
+        <div className="rounded-xl border border-border p-6">
           <h3 className="text-sm font-medium mb-4">Cost Estimate</h3>
           <div className="grid gap-3">
             {stats.costEstimate.byProvider.map((p) => (

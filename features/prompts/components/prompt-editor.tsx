@@ -3,15 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { Separator } from "@/components/ui/separator";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { FloppyDisk, ArrowCounterClockwise, MagicWand } from "@phosphor-icons/react";
 import { PROMPT_TEMPLATES, PROMPT_TEMPLATE_OPTIONS, type PromptTemplateId } from "@/features/prompts/types";
 
@@ -81,7 +72,7 @@ export function PromptEditor({ repoFullName, initialPrompt, onSave }: PromptEdit
       </div>
 
       {/* Prompt Editor */}
-      <div className="rounded-none border border-border">
+      <div className="rounded-xl border border-border">
         <div className="border-b border-border bg-muted/30 px-4 py-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-muted-foreground">
