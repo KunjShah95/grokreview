@@ -35,6 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
 
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+
     steps:
       - name: Request AI Review
         id: review
