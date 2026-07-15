@@ -5,11 +5,15 @@ import { homedir } from "os";
 import { join } from "path";
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
 
+type ActionKind = "review" | "scan" | "test-gen";
+
 interface LocalUsage {
   totalReviews: number;
   reviewsByProvider: Record<string, number>;
   monthlyUsage: Array<{ month: string; count: number }>;
   lastReset: string;
+  /** Counts for non-review AI actions (scans, test generation). Optional for backwards compatibility with older usage.json files. */
+  actionCounts?: Partial<Record<ActionKind, number>>;
 }
 
 const USAGE_PATH = join(homedir(), ".grokreview", "usage.json");
@@ -54,6 +58,19 @@ export function trackReview(provider: string, modelId: string) {
     usage.monthlyUsage.push({ month: currentMonth, count: 1 });
   }
 
+  saveLocalUsage(usage);
+}
+
+/**
+ * Track a non-review AI action (security scan, test generation) in local
+ * usage stats. Kept separate from trackReview's counters since these aren't
+ * "reviews" — just tallied by kind for the `usage` command's breakdown.
+ */
+export function trackAction(kind: ActionKind, provider: string, modelId: string) {
+  const usage = loadLocalUsage();
+  usage.actionCounts = usage.actionCounts || {};
+  usage.actionCounts[kind] = (usage.actionCounts[kind] || 0) + 1;
+  usage.reviewsByProvider[provider] = (usage.reviewsByProvider[provider] || 0) + 1;
   saveLocalUsage(usage);
 }
 
@@ -108,8 +125,14 @@ export const usageCommand = new Command("usage")
     console.log(`    ${chalk.dim("•")} Total CLI reviews: ${chalk.bold(String(usage.totalReviews))}`);
     console.log(`    ${chalk.dim("•")} Current month: ${chalk.bold(String(usage.monthlyUsage.find((m) => m.month === new Date().toISOString().slice(0, 7))?.count || 0))}`);
 
+    if (usage.actionCounts && Object.keys(usage.actionCounts).length > 0) {
+      console.log(chalk.dim("\n    Other AI actions:"));
+      if (usage.actionCounts.scan) console.log(`      ${chalk.dim("→")} Security scans: ${usage.actionCounts.scan}`);
+      if (usage.actionCounts["test-gen"]) console.log(`      ${chalk.dim("→")} Test generations: ${usage.actionCounts["test-gen"]}`);
+    }
+
     if (Object.keys(usage.reviewsByProvider).length > 0) {
-      console.log(chalk.dim("\n    By provider:"));
+      console.log(chalk.dim("\n    By provider (all actions):"));
       for (const [provider, count] of Object.entries(usage.reviewsByProvider)) {
         console.log(`      ${chalk.dim("→")} ${provider}: ${count}`);
       }

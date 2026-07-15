@@ -4,6 +4,7 @@ import { getUserInstallationId } from "@/features/github/server/installation";
 import { getPullRequestFiles } from "@/features/reviews/server/pr-files";
 import { generateTestsForPr } from "@/features/test-gen/server/generate-tests";
 import { saveGeneratedTests } from "@/features/test-gen/server/save-tests";
+import { canUserReview } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
 /**
@@ -23,6 +24,13 @@ export async function POST(request: Request) {
   const installationId = await getUserInstallationId(session.user.id);
   if (!installationId) {
     return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
+  }
+
+  if (!(await canUserReview(session.user.id))) {
+    return NextResponse.json(
+      { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including test generation." },
+      { status: 429 }
+    );
   }
 
   const body = await request.json();

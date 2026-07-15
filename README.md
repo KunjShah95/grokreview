@@ -51,17 +51,21 @@ Compare two AI models **side-by-side** on the same PR. See speed comparison, uni
 ### 🔍 Webhook Event Log
 Live feed of incoming GitHub webhooks for debugging. Filter by event type, expand payloads, auto-refresh.
 
-### 🖥️ CLI Tool (`pr-review`)
+### 🖥️ CLI Tool
 ```bash
-pr-review review owner/repo#42                 # Review any PR
-pr-review review -p 42 -r owner/repo -m groq:llama3-70b  # Choose model
-pr-review batch -r owner/repo                  # Batch review all open PRs
-pr-review ci -p 42 -r owner/repo               # CI mode (exit code on failures)
-pr-review models                               # List available models
-pr-review models --local                       # Detect local Ollama models
-pr-review usage                                # Show usage stats & limits
-pr-review config set GROQ_API_KEY xxx          # Set API key
-pr-review config list                          # Show configuration
+npm install -g grokreview   # installs both `grokreview` and `pr-review` binaries
+
+grokreview review owner/repo#42                 # Review any PR
+grokreview review -p 42 -r owner/repo -m groq:llama3-70b  # Choose model
+grokreview batch -r owner/repo                  # Batch review all open PRs
+grokreview ci -p 42 -r owner/repo               # CI mode (exit code on failures)
+grokreview models                               # List available models
+grokreview models --local                       # Detect local Ollama models
+grokreview scan owner/repo#42                   # Scan a PR for secrets & vulnerabilities
+grokreview generate-tests owner/repo#42         # Generate unit tests for a PR
+grokreview usage                                # Show usage stats & limits
+grokreview config set GROQ_API_KEY xxx          # Set API key
+grokreview config list                          # Show configuration
 ```
 
 ### 🔔 Integrations
@@ -155,7 +159,7 @@ npm run build
 npm link  # or: npm install -g .
 ```
 
-Published to npm as [`grokreview-cli`](https://www.npmjs.com/package/grokreview-cli) (binary: `pr-review`).
+Published to npm as [`grokreview`](https://www.npmjs.com/package/grokreview) — `npm install -g grokreview` gives you both the `grokreview` and `pr-review` binaries (identical, use whichever you prefer).
 
 ---
 
@@ -275,7 +279,7 @@ Tools: `review_pr`, `scan_security`, `generate_tests`. See [`mcp/README.md`](mcp
 │   ├── test-gen/                 # AI test generator
 │   ├── usage/                    # Usage tracking
 │   └── webhooks/                 # Webhook event log
-├── cli/                          # CLI tool (pr-review) — published as grokreview-cli
+├── cli/                          # CLI tool — published to npm as `grokreview` (bins: grokreview, pr-review)
 │   └── src/commands/             # review, models, config, batch, ci, usage
 ├── mcp/                          # MCP server — published as grokreview-mcp
 │   └── src/tools/                # review_pr, scan_security, generate_tests

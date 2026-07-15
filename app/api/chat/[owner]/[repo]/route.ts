@@ -5,6 +5,7 @@ import { buildRepoNamespace } from "@/features/repo-sync/server/repo-sync";
 import { searchRepoContext } from "@/features/chat/server/retrieve";
 import { getChatHistory, getOrCreateChatSession, saveChatMessage } from "@/features/chat/server/chat-session";
 import { streamChatResponse } from "@/features/chat/server/stream-chat";
+import { canUserReview } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
 /**
@@ -55,6 +56,13 @@ export async function POST(
   const installationId = await getUserInstallationId(session.user.id);
   if (!installationId) {
     return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
+  }
+
+  if (!(await canUserReview(session.user.id))) {
+    return NextResponse.json(
+      { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including repo chat." },
+      { status: 429 }
+    );
   }
 
   const { owner, repo } = await params;

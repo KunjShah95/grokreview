@@ -1,9 +1,10 @@
 {
-  "name": "grokreview-cli",
+  "name": "grokreview",
   "version": "0.1.0",
-  "description": "GrokReview CLI - AI-powered GitHub PR reviews from your terminal. Bring your own model: Groq, Mistral, HuggingFace, OpenRouter, or local Ollama.",
+  "description": "GrokReview CLI - AI-powered GitHub PR reviews, security scans, and test generation from your terminal. Bring your own model: Groq, Mistral, HuggingFace, Gemini, OpenRouter, or local Ollama.",
   "type": "module",
   "bin": {
+    "grokreview": "dist/index.js",
     "pr-review": "dist/index.js"
   },
   "files": [
@@ -30,7 +31,8 @@
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "octokit": "^5.0.5",
-    "ora": "^8.0.1"
+    "ora": "^8.0.1",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
@@ -38,6 +40,7 @@
     "typescript": "^5.5.0"
   },
   "keywords": [
+    "grokreview",
     "pr-review",
     "code-review",
     "github",
@@ -46,8 +49,11 @@
     "pull-request",
     "groq",
     "mistral",
+    "gemini",
     "ollama",
     "openrouter",
+    "security-scanner",
+    "test-generation",
     "cli"
   ],
   "author": "Kunj Shah",
