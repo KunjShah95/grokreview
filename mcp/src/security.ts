@@ -101,7 +101,10 @@ function getAddedLines(patch: string): Array<{ line: string; lineNumber: number 
       newLineNumber = parseInt(hunkMatch[1], 10) - 1;
       continue;
     }
-    if (rawLine.startsWith("+++") || rawLine.startsWith("---")) continue;
+    // File headers and diff metadata markers (e.g. "\ No newline at end of
+    // file") aren't source lines — counting them shifts every subsequent
+    // reported line number by one.
+    if (rawLine.startsWith("+++") || rawLine.startsWith("---") || rawLine.startsWith("\\")) continue;
     if (rawLine.startsWith("+")) {
       newLineNumber += 1;
       results.push({ line: rawLine.slice(1), lineNumber: newLineNumber });

@@ -47,11 +47,24 @@ export async function chatWithRepo(input: { repoFullName: string; message: strin
     body: JSON.stringify({ repoFullName: input.repoFullName, message: input.message }),
   });
 
-  const data = (await response.json()) as ChatBridgeResponse & { error?: string };
+  // The bridge endpoint can return a non-JSON body (e.g. an HTML error page
+  // from a proxy/502) especially when it's misconfigured or unreachable, so
+  // don't assume response.json() will succeed.
+  let data: (ChatBridgeResponse & { error?: string }) | null = null;
+  try {
+    data = (await response.json()) as ChatBridgeResponse & { error?: string };
+  } catch {
+    // fall through to the response.ok / statusText-based error below
+  }
 
-  if (!response.ok) {
+  if (!response.ok || !data) {
     return {
-      content: [{ type: "text" as const, text: `chat_with_repo failed: ${data.error || response.statusText}` }],
+      content: [
+        {
+          type: "text" as const,
+          text: `chat_with_repo failed: ${data?.error || response.statusText || `Status ${response.status}`}`,
+        },
+      ],
       isError: true,
     };
   }

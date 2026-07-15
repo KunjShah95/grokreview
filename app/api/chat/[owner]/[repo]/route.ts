@@ -76,8 +76,13 @@ export async function POST(
     );
   }
 
-  const body = await request.json();
-  const { message } = body;
+  let message: unknown;
+  try {
+    const body = await request.json();
+    message = body.message;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   if (!message || typeof message !== "string") {
     return NextResponse.json({ error: "message is required" }, { status: 400 });
   }

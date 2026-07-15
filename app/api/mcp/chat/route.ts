@@ -40,8 +40,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid or missing API key." }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { repoFullName, message } = body;
+  let repoFullName: unknown;
+  let message: unknown;
+  try {
+    const body = await request.json();
+    repoFullName = body.repoFullName;
+    message = body.message;
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
   if (!repoFullName || typeof repoFullName !== "string") {
     return NextResponse.json({ error: "repoFullName is required" }, { status: 400 });
   }

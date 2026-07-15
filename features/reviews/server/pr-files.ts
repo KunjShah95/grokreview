@@ -22,10 +22,13 @@ export async function getPullRequestFiles(
   const octokit = await app.getInstallationOctokit(installationId)
   const [owner, repo] = repoFullName.split("/");
 
-  const { data } = await octokit.request(
+  // paginate() follows every page of results — a single per_page=100 request
+  // silently truncated the file list (and therefore the review/scan/test-gen
+  // coverage) for any PR touching more than 100 files.
+  const data = await octokit.paginate(
     "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
     { owner, repo, pull_number: prNumber, per_page: FILES_PER_PAGE }
-  )
+  );
 
   const files: PrFile[] = [];
   for (const file of data) {

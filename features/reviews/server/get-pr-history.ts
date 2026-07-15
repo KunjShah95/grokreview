@@ -110,7 +110,8 @@ export async function getPRReviewHistory(
     securityFindings: [...pr.securityFindings]
       .sort(
         (a, b) =>
-          SEVERITY_WEIGHT[b.severity as SecuritySeverity] - SEVERITY_WEIGHT[a.severity as SecuritySeverity]
+          (SEVERITY_WEIGHT[b.severity as SecuritySeverity] ?? 0) -
+          (SEVERITY_WEIGHT[a.severity as SecuritySeverity] ?? 0)
       )
       .map((f) => ({
         id: f.id,

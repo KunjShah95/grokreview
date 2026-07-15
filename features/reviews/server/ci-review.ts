@@ -36,7 +36,9 @@ async function getPrFilesForCi(
   repo: string,
   prNumber: number
 ): Promise<PrFile[]> {
-  const { data } = await octokit.request(
+  // paginate() follows every page — a single per_page=100 request silently
+  // truncated the scanned file list for PRs touching more than 100 files.
+  const data = await octokit.paginate(
     "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
     { owner, repo, pull_number: prNumber, per_page: FILES_PER_PAGE }
   );

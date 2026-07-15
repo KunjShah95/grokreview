@@ -1,5 +1,5 @@
 import { Parser, Language, type Node as TSNode } from "web-tree-sitter";
-import { readFileSync } from "fs";
+import { readFile } from "fs/promises";
 import { dirname, join } from "path";
 import { createRequire } from "module";
 
@@ -115,7 +115,7 @@ async function getParser(lang: SupportedLang): Promise<Parser> {
     // turbopackIgnore: wasmPath is a runtime-computed path (see resolveWasmPath);
     // the target .wasm files are explicitly listed in next.config.ts's
     // outputFileTracingIncludes, so they ship regardless of static tracing here.
-    const bytes = readFileSync(/* turbopackIgnore: true */ wasmPath);
+    const bytes = await readFile(/* turbopackIgnore: true */ wasmPath);
     language = await Language.load(bytes);
     languageCache.set(lang, language);
   }

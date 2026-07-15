@@ -36,16 +36,23 @@ const testSchema = z.object({
 });
 
 async function generateOneTest(file: PrFile, framework: { framework: string; hint: string }, modelOverride?: string) {
-  const { model } = resolveModel(modelOverride);
-  const { object } = await generateObject({
-    model,
-    schema: testSchema,
-    system:
-      "You are a senior engineer writing unit tests for a pull request diff. Focus on changed behavior, " +
-      "1-4 focused test cases, realistic imports. Return only test file source code.",
-    prompt: `File: ${file.filePath}\n${framework.hint}\n\nDiff:\n\`\`\`diff\n${file.patch}\n\`\`\``,
-  });
-  return { filePath: file.filePath, framework: framework.framework, content: object.content };
+  try {
+    const { model } = resolveModel(modelOverride);
+    const { object } = await generateObject({
+      model,
+      schema: testSchema,
+      system:
+        "You are a senior engineer writing unit tests for a pull request diff. Focus on changed behavior, " +
+        "1-4 focused test cases, realistic imports. Return only test file source code.",
+      prompt: `File: ${file.filePath}\n${framework.hint}\n\nDiff:\n\`\`\`diff\n${file.patch}\n\`\`\``,
+    });
+    return { filePath: file.filePath, framework: framework.framework, content: object.content };
+  } catch (error) {
+    // Don't let one file's generation failure (rate limit, model error) sink
+    // every other file's results via Promise.all — skip it and keep going.
+    console.error(`Failed to generate test for ${file.filePath}:`, error);
+    return null;
+  }
 }
 
 export const generateTestsInputSchema = {
@@ -74,9 +81,23 @@ export async function generateTests(input: { owner: string; repo: string; prNumb
     };
   }
 
-  const results = await Promise.all(
-    testable.map((file) => generateOneTest(file, detectFramework(file.filePath)!, input.model))
-  );
+  const results = (
+    await Promise.all(
+      testable.map((file) => generateOneTest(file, detectFramework(file.filePath)!, input.model))
+    )
+  ).filter((r): r is NonNullable<typeof r> => r !== null);
+
+  if (results.length === 0) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: `Failed to generate tests for any of the files in ${input.owner}/${input.repo}#${input.prNumber}.`,
+        },
+      ],
+      isError: true,
+    };
+  }
 
   const report = results
     .map((r) => `### ${r.filePath} (${r.framework})\n\`\`\`\n${r.content}\n\`\`\``)

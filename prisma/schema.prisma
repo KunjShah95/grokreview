@@ -132,7 +132,10 @@ model ChatSession {
   updatedAt    DateTime      @updatedAt
   messages     ChatMessage[]
 
-  @@index([userId, repoFullName])
+  // Enforces "one session per (user, repo)" at the DB level so concurrent
+  // requests can't race a find-then-create into two sessions that split
+  // chat history — see getOrCreateChatSession's upsert.
+  @@unique([userId, repoFullName])
   @@map("chat_session")
 }
 

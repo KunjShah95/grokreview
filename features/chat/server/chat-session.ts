@@ -1,18 +1,17 @@
 import { prisma } from "@/lib/db";
 import type { RepoContextChunk } from "./retrieve";
 
-/** Finds or creates the single chat session per (user, repo) pair. */
+/**
+ * Finds or creates the single chat session per (user, repo) pair.
+ * Uses upsert (backed by a DB unique constraint on [userId, repoFullName])
+ * instead of find-then-create, since concurrent requests for the same pair
+ * would otherwise race into two sessions with split chat history.
+ */
 export async function getOrCreateChatSession(userId: string, repoFullName: string) {
-  const existing = await prisma.chatSession.findFirst({
-    where: { userId, repoFullName },
-    orderBy: { createdAt: "desc" },
-  });
-  if (existing) {
-    return existing;
-  }
-
-  return prisma.chatSession.create({
-    data: { userId, repoFullName },
+  return prisma.chatSession.upsert({
+    where: { userId_repoFullName: { userId, repoFullName } },
+    update: {},
+    create: { userId, repoFullName },
   });
 }
 
