@@ -8,6 +8,19 @@
 
 GrokReview is a next-generation AI code review platform — CodeLens AI — that connects to your GitHub repositories and acts like a senior engineer on every pull request: explaining changes in plain English, catching bugs and security issues, generating unit tests, and answering questions about your codebase. It supports **6 AI providers** (Groq, Mistral, HuggingFace, Gemini, OpenRouter, Ollama), has a **streaming SSE review engine**, a **security scanner**, an **AI test generator**, **RAG chat over your repository**, a **code health dashboard**, **GitHub Actions CI integration**, an **analytics dashboard with heatmaps**, a **multi-model comparison tool**, a full-featured **CLI**, and an **MCP server** for use from Claude Code, Cursor, and other MCP clients.
 
+📄 **[Read the full engineering case study](CASE_STUDY.md)** — architecture decisions, and two real production bugs found and fixed along the way.
+
+---
+
+## 🎯 What makes this different
+
+Most "AI PR review" projects are a single model reading a diff. This one isn't:
+
+- **No single point of failure** — 6 interchangeable providers with automatic fallback; a rate-limited or down provider doesn't stop reviews.
+- **A security scanner that doesn't cry wolf** — deterministic secret detection (zero false positives) plus AI-assisted vulnerability heuristics, with only leaked secrets allowed to block a merge.
+- **Real code understanding, not string matching** — Tree-sitter AST parsing chunks synced repos along function/class boundaries, so RAG chat and review context stay semantically coherent instead of arbitrary 80-line windows.
+- **Usable from a terminal or an AI coding agent, not just a browser** — a published CLI (`grokreview`) and an MCP server (`grokreview-mcp`) expose the same engine to Claude Code, Cursor, and CI pipelines.
+
 ---
 
 ## ✨ Features
@@ -189,36 +202,41 @@ Tools: `review_pr`, `scan_security`, `generate_tests`. See [`mcp/README.md`](mcp
 
 ## 🏗️ Architecture
 
-```
-┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│   GitHub     │────▶│  Webhook    │────▶│   Inngest    │
-│  Webhooks    │     │  Handler    │     │  Background  │
-└──────────────┘     └─────────────┘     │     Jobs     │
-                                         └──────┬───────┘
-                                                │
-                          ┌─────────────────────┼──────────────────────┐
-                          ▼                     ▼                      ▼
-                 ┌────────────────┐   ┌──────────────────┐   ┌──────────────────┐
-                 │  AI Review     │   │  Security Scan   │   │  Test Generator  │
-                 │  Pipeline      │   │  (regex + AI)    │   │  (AI)            │
-                 └────────┬───────┘   └────────┬─────────┘   └────────┬─────────┘
-                          └─────────────────────┼──────────────────────┘
-                                                 ▼
-┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│  Dashboard   │◀────│  Prisma DB  │◀────│   Pinecone   │◀── Chat with Repo (RAG)
-│  (Next.js)   │     │ (PostgreSQL)│     │  Vector DB   │◀── Code Health snapshots
-└──────────────┘     └─────────────┘     └──────────────┘
+```mermaid
+flowchart TD
+    GH[GitHub Webhook] --> Inngest[Inngest Background Job]
+    Inngest --> Files[Fetch PR Files]
+    Files --> Review[AI Review Pipeline]
+    Files --> Scan["Security Scan (regex + AI)"]
+    Files --> Tests["Test Generator (AI)"]
 
-┌──────────────┐     ┌─────────────┐     ┌──────────────────────────────┐
-│   CLI Tool   │────▶│  GitHub API │     │  AI Providers: Groq, Mistral,│
-│  (pr-review) │     │  (Octokit)  │     │  HuggingFace, Gemini,        │
-└──────────────┘     └─────────────┘     │  OpenRouter, Ollama          │
-                                          └──────────────────────────────┘
-┌──────────────┐                          ┌──────────────────────────────┐
-│  GitHub      │──────────▶ PR Comments   │  MCP Server (grokreview-mcp) │
-│  Actions CI  │                          │  review_pr · scan_security · │
-└──────────────┘                          │  generate_tests              │
-                                          └──────────────────────────────┘
+    Review --> Post[Post Formal Review]
+    Scan --> Post
+    Scan -->|leaked secret| Block[REQUEST_CHANGES]
+    Tests --> DB[(Postgres)]
+    Scan --> DB
+    Review --> DB
+
+    Sync[Repo Sync] --> AST["Tree-sitter AST Chunking"]
+    AST --> Pine[(Pinecone Vector DB)]
+    Review -.-> Pine
+    Chat["Chat with Repo (SSE)"] --> Pine
+    Health["Code Health Snapshot"] --> DB
+
+    DB --> Dash["Dashboard (Next.js)"]
+    Pine --> Dash
+
+    CLI["CLI: grokreview"] -->|BYO keys, standalone| GHAPI[GitHub API]
+    MCP["MCP Server: grokreview-mcp"] -->|review/scan/test-gen: standalone| GHAPI
+    MCP -->|chat_with_repo| Bridge["API-key Bridge /api/mcp/chat"]
+    Bridge --> Pine
+    Actions[GitHub Actions CI] --> PRComment[PR Comment]
+
+    Providers["Groq · Mistral · HuggingFace · Gemini · OpenRouter · Ollama"]
+    Review -.-> Providers
+    Scan -.-> Providers
+    Tests -.-> Providers
+    Chat -.-> Providers
 ```
 
 ### Key Technologies
