@@ -21,6 +21,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SecurityFindingsList } from "@/features/security/components/security-findings-list";
+import { GeneratedTestsList } from "@/features/test-gen/components/generated-tests-list";
 
 type AvailableModel = {
   model: string;
@@ -317,6 +319,18 @@ export function PRHistoryList({ items, models }: PRHistoryListProps) {
                               prNumber={pr.prNumber}
                             />
                           </div>
+
+                          {/* Divider */}
+                          <div className="border-t border-border" />
+
+                          {/* Security Findings */}
+                          <SecurityFindingsList pullRequestId={pr.id} findings={pr.securityFindings} />
+
+                          {/* Divider */}
+                          <div className="border-t border-border" />
+
+                          {/* Generated Tests */}
+                          <GeneratedTestsList pullRequestId={pr.id} tests={pr.generatedTests} />
                         </div>
                       </TableCell>
                     </TableRow>

@@ -5,7 +5,7 @@
  * Users see review text appear token-by-token as the AI generates it.
  *
  * Body: {
- *   provider: "groq" | "mistral" | "huggingface" | "openrouter" | "ollama",
+ *   provider: "groq" | "mistral" | "huggingface" | "gemini" | "openrouter" | "ollama",
  *   modelId: string,
  *   repoFullName: string,
  *   title: string,
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // Validate provider
-    const validProviders = ["groq", "mistral", "huggingface", "openrouter", "ollama"];
+    const validProviders = ["groq", "mistral", "huggingface", "gemini", "openrouter", "ollama"];
     if (!validProviders.includes(provider)) {
       return new Response(
         JSON.stringify({ error: `Invalid provider: ${provider}` }),

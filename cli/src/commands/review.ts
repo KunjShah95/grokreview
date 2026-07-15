@@ -7,6 +7,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createHuggingFace } from "@ai-sdk/huggingface";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { loadConfig, type CliConfig } from "../utils/config.js";
 import { trackReview } from "./usage.js";
 
@@ -57,6 +58,7 @@ function getModel(config: CliConfig, modelArg?: string) {
   if (config.apiKeys.groq) return { provider: "groq", modelId: "llama3-8b-8192" };
   if (config.apiKeys.mistral) return { provider: "mistral", modelId: "open-mistral-nemo" };
   if (config.apiKeys.huggingface) return { provider: "huggingface", modelId: "HuggingFaceH4/zephyr-7b-beta" };
+  if (config.apiKeys.gemini) return { provider: "gemini", modelId: "gemini-2.0-flash" };
   if (config.apiKeys.openrouter) return { provider: "openrouter", modelId: "openrouter/free" };
 
   throw new Error(
@@ -74,6 +76,8 @@ function createModel(provider: string, modelId: string, config: CliConfig) {
       return { model: createMistral({ apiKey: config.apiKeys.mistral })(modelId), name: `${provider}/${modelId}` };
     case "huggingface":
       return { model: createHuggingFace({ apiKey: config.apiKeys.huggingface })(modelId), name: `${provider}/${modelId}` };
+    case "gemini":
+      return { model: createGoogleGenerativeAI({ apiKey: config.apiKeys.gemini })(modelId), name: `${provider}/${modelId}` };
     case "openrouter":
       return { model: createOpenAI({ apiKey: config.apiKeys.openrouter, baseURL: "https://openrouter.ai/api/v1" })(modelId), name: `${provider}/${modelId}` };
     default:

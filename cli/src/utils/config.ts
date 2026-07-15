@@ -7,6 +7,7 @@ export interface CliConfig {
     groq?: string;
     mistral?: string;
     huggingface?: string;
+    gemini?: string;
     openrouter?: string;
     github?: string;
     [key: string]: string | undefined;
@@ -37,6 +38,7 @@ export function loadConfig(): CliConfig {
       config.apiKeys.groq = config.apiKeys.groq || process.env.GROQ_API_KEY;
       config.apiKeys.mistral = config.apiKeys.mistral || process.env.MISTRAL_API_KEY;
       config.apiKeys.huggingface = config.apiKeys.huggingface || process.env.HUGGINGFACE_API_KEY;
+      config.apiKeys.gemini = config.apiKeys.gemini || process.env.GEMINI_API_KEY;
       config.apiKeys.openrouter = config.apiKeys.openrouter || process.env.OPENROUTER_API_KEY;
       config.apiKeys.github = config.apiKeys.github || process.env.GITHUB_TOKEN;
       return config;
@@ -51,6 +53,7 @@ export function loadConfig(): CliConfig {
       groq: process.env.GROQ_API_KEY,
       mistral: process.env.MISTRAL_API_KEY,
       huggingface: process.env.HUGGINGFACE_API_KEY,
+      gemini: process.env.GEMINI_API_KEY,
       openrouter: process.env.OPENROUTER_API_KEY,
       github: process.env.GITHUB_TOKEN,
     },

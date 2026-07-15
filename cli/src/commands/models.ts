@@ -23,6 +23,10 @@ const ALL_MODELS: ModelEntry[] = [
   { provider: "HuggingFace", modelId: "HuggingFaceH4/zephyr-7b-beta", label: "Zephyr 7B", free: true },
   { provider: "HuggingFace", modelId: "mistralai/Mistral-7B-Instruct-v0.3", label: "Mistral 7B Instruct", free: true },
   { provider: "HuggingFace", modelId: "meta-llama/Llama-3.2-3B-Instruct", label: "Llama 3.2 3B", free: true },
+  // Gemini
+  { provider: "Gemini", modelId: "gemini-2.0-flash", label: "Gemini 2.0 Flash", free: true },
+  { provider: "Gemini", modelId: "gemini-2.0-flash-lite", label: "Gemini 2.0 Flash Lite", free: true },
+  { provider: "Gemini", modelId: "gemini-1.5-pro", label: "Gemini 1.5 Pro", free: false },
   // OpenRouter
   { provider: "OpenRouter", modelId: "openrouter/free", label: "Free tier", free: true },
   { provider: "OpenRouter", modelId: "openrouter/auto", label: "Best available", free: false },

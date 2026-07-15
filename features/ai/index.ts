@@ -22,4 +22,5 @@ export { getOpenRouterModel } from "./providers/openrouter";
 export { getGroqModel } from "./providers/groq";
 export { getMistralModel } from "./providers/mistral";
 export { getHuggingFaceModel } from "./providers/huggingface";
+export { getGeminiModel } from "./providers/gemini";
 export { ollamaGenerate, listOllamaModels } from "./providers/ollama";

@@ -13,6 +13,7 @@ import { getOpenRouterModel } from "./providers/openrouter";
 import { getGroqModel } from "./providers/groq";
 import { getMistralModel } from "./providers/mistral";
 import { getHuggingFaceModel } from "./providers/huggingface";
+import { getGeminiModel } from "./providers/gemini";
 import { ollamaGenerate, isOllamaRunning, detectOllamaModels } from "./providers/ollama";
 
 export { detectOllamaModels, isOllamaRunning };
@@ -32,6 +33,8 @@ export function getModel(provider: AIProvider, modelId: string): any {
       return getMistralModel(modelId);
     case "huggingface":
       return getHuggingFaceModel(modelId);
+    case "gemini":
+      return getGeminiModel(modelId);
     case "ollama":
       // Ollama uses a custom adapter that wraps the LanguageModelV1 interface
       return createOllamaModelAdapter(modelId);
@@ -62,6 +65,9 @@ export function getDefaultModel(preference?: UserModelPreference): { provider: A
   }
   if (process.env.HUGGINGFACE_API_KEY) {
     return { provider: "huggingface", modelId: "HuggingFaceH4/zephyr-7b-beta" };
+  }
+  if (process.env.GEMINI_API_KEY) {
+    return { provider: "gemini", modelId: "gemini-2.0-flash" };
   }
 
   return { provider: (DEFAULT_MODEL?.provider || "openrouter"), modelId: (DEFAULT_MODEL?.modelId || "openrouter/free") };
@@ -109,6 +115,7 @@ export function getConfiguredProviders(): Array<{ provider: AIProvider; label: s
     { provider: "groq", label: "Groq", configured: !!process.env.GROQ_API_KEY },
     { provider: "mistral", label: "Mistral", configured: !!process.env.MISTRAL_API_KEY },
     { provider: "huggingface", label: "HuggingFace", configured: !!process.env.HUGGINGFACE_API_KEY },
+    { provider: "gemini", label: "Gemini", configured: !!process.env.GEMINI_API_KEY },
     { provider: "ollama", label: "Ollama (Local)", configured: true }, // Always available, runtime check
   ];
 }

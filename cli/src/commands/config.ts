@@ -16,6 +16,7 @@ export const configCommand = new Command("config")
           ["GROQ_API_KEY", config.apiKeys.groq],
           ["MISTRAL_API_KEY", config.apiKeys.mistral],
           ["HUGGINGFACE_API_KEY", config.apiKeys.huggingface],
+          ["GEMINI_API_KEY", config.apiKeys.gemini],
           ["OPENROUTER_API_KEY", config.apiKeys.openrouter],
           ["GITHUB_TOKEN", config.apiKeys.github],
         ] as const;
@@ -40,7 +41,7 @@ export const configCommand = new Command("config")
         const config = loadConfig();
 
         // API keys
-        const apiKeys = ["GROQ_API_KEY", "MISTRAL_API_KEY", "HUGGINGFACE_API_KEY", "OPENROUTER_API_KEY", "GITHUB_TOKEN"] as const;
+        const apiKeys = ["GROQ_API_KEY", "MISTRAL_API_KEY", "HUGGINGFACE_API_KEY", "GEMINI_API_KEY", "OPENROUTER_API_KEY", "GITHUB_TOKEN"] as const;
         if (apiKeys.includes(key as typeof apiKeys[number])) {
           (config.apiKeys as Record<string, string>)[key.toLowerCase().replace(/_api_key/g, "")] = value;
           saveConfig(config);
@@ -51,7 +52,7 @@ export const configCommand = new Command("config")
 
         // Preferences
         if (key === "defaultProvider") {
-          const valid = ["groq", "mistral", "huggingface", "openrouter", "ollama"];
+          const valid = ["groq", "mistral", "huggingface", "gemini", "openrouter", "ollama"];
           if (!valid.includes(value.toLowerCase())) {
             console.error(chalk.red(`\n  ✗ Invalid provider. Valid options: ${valid.join(", ")}\n`));
             process.exit(1);
@@ -70,6 +71,6 @@ export const configCommand = new Command("config")
         }
 
         console.error(chalk.red(`\n  ✗ Unknown config key: ${key}\n`));
-        console.log(chalk.dim("  Valid keys: GROQ_API_KEY, MISTRAL_API_KEY, HUGGINGFACE_API_KEY, OPENROUTER_API_KEY, GITHUB_TOKEN, defaultProvider, defaultModel\n"));
+        console.log(chalk.dim("  Valid keys: GROQ_API_KEY, MISTRAL_API_KEY, HUGGINGFACE_API_KEY, GEMINI_API_KEY, OPENROUTER_API_KEY, GITHUB_TOKEN, defaultProvider, defaultModel\n"));
       })
   );

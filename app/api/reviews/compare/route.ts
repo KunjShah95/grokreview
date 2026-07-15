@@ -41,10 +41,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const validProviders = ["groq", "mistral", "huggingface", "openrouter", "ollama"];
+    const validProviders = ["groq", "mistral", "huggingface", "gemini", "openrouter", "ollama"];
     if (!validProviders.includes(modelA.provider) || !validProviders.includes(modelB.provider)) {
       return NextResponse.json(
-        { error: "Invalid provider. Valid: groq, mistral, huggingface, openrouter, ollama" },
+        { error: "Invalid provider. Valid: groq, mistral, huggingface, gemini, openrouter, ollama" },
         { status: 400 }
       );
     }

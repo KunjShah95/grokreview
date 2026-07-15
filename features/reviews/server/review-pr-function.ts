@@ -8,6 +8,9 @@ import { chunkPrFiles } from "../utils/chunk-code";
 import { buildPrNamespace, saveChunksToPinecone, searchPrContext } from "./vector";
 import { buildRepoNamespace } from "@/features/repo-sync/server/repo-sync";
 import { getUserIdByInstallationId } from "@/features/github/server/installation";
+import { scanPullRequest, saveSecurityFindings } from "@/features/security/server/scan-pr";
+import { generateTestsForPr } from "@/features/test-gen/server/generate-tests";
+import { saveGeneratedTests } from "@/features/test-gen/server/save-tests";
 
 export const reviewPullRequest = inngest.createFunction(
   { id: "review-pull-request", triggers: { event: "github/pr.received" } },
@@ -21,14 +24,27 @@ export const reviewPullRequest = inngest.createFunction(
       });
     });
 
-    const chunks = await step.run("breakdown-code", async () => {
-      const files = await getPullRequestFiles(
+    const files = await step.run("fetch-pr-files", async () => {
+      return getPullRequestFiles(
         pullRequest.installationId,
         pullRequest.repoFullName,
         pullRequest.prNumber
       );
+    });
+
+    const chunks = await step.run("breakdown-code", async () => {
       // Turn unified diffs into fixed-size chunks for embedding
       return chunkPrFiles(pullRequest.prNumber, files);
+    });
+
+    await step.run("scan-security", async () => {
+      const findings = await scanPullRequest(files);
+      await saveSecurityFindings(pullRequestId, findings);
+    });
+
+    await step.run("generate-tests", async () => {
+      const tests = await generateTestsForPr(files);
+      await saveGeneratedTests(pullRequestId, tests);
     });
 
     if (chunks.length === 0) {

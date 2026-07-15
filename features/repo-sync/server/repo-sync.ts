@@ -120,6 +120,15 @@ export async function saveRepoChunks(namespace: string, chunks: CodeChunk[]) {
   }
 }
 
+/** Lists repos that have completed a full codebase sync for this installation (used by Chat-with-Repo). */
+export async function getSyncedRepos(installationId: number) {
+  return prisma.repoSync.findMany({
+    where: { installationId, status: "synced" },
+    select: { repoFullName: true, chunkCount: true, syncedAt: true },
+    orderBy: { syncedAt: "desc" },
+  });
+}
+
 export async function getRepoSyncStatuses(repoFullNames: string[]) {
   const syncs = await prisma.repoSync.findMany({
     where: { repoFullName: { in: repoFullNames } },

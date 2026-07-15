@@ -1,5 +1,24 @@
 import { prisma } from "@/lib/db";
 import { getUserInstallationId } from "@/features/github/server/installation";
+import { SEVERITY_WEIGHT, type SecuritySeverity } from "@/features/security/types";
+
+export type PRSecurityFindingSummary = {
+  id: string;
+  filePath: string;
+  line: number | null;
+  severity: string;
+  category: string;
+  message: string;
+  suggestion: string | null;
+};
+
+export type PRGeneratedTestSummary = {
+  id: string;
+  filePath: string;
+  testFilePath: string;
+  framework: string;
+  content: string;
+};
 
 export type PRReviewHistoryItem = {
   id: string;
@@ -14,8 +33,11 @@ export type PRReviewHistoryItem = {
   model: string | null;
   reviewComment: string | null;
   reviewedAt: string | null;
+  complexityScore: number | null;
   createdAt: string;
   updatedAt: string;
+  securityFindings: PRSecurityFindingSummary[];
+  generatedTests: PRGeneratedTestSummary[];
 };
 
 export type PRHistoryFilters = {
@@ -63,6 +85,10 @@ export async function getPRReviewHistory(
     where,
     orderBy: { updatedAt: "desc" },
     take: 100,
+    include: {
+      securityFindings: true,
+      generatedTests: true,
+    },
   });
 
   return prs.map((pr) => ({
@@ -78,8 +104,30 @@ export async function getPRReviewHistory(
     model: pr.model,
     reviewComment: pr.reviewComment,
     reviewedAt: pr.reviewedAt?.toISOString() ?? null,
+    complexityScore: pr.complexityScore,
     createdAt: pr.createdAt.toISOString(),
     updatedAt: pr.updatedAt.toISOString(),
+    securityFindings: [...pr.securityFindings]
+      .sort(
+        (a, b) =>
+          SEVERITY_WEIGHT[b.severity as SecuritySeverity] - SEVERITY_WEIGHT[a.severity as SecuritySeverity]
+      )
+      .map((f) => ({
+        id: f.id,
+        filePath: f.filePath,
+        line: f.line,
+        severity: f.severity,
+        category: f.category,
+        message: f.message,
+        suggestion: f.suggestion,
+      })),
+    generatedTests: pr.generatedTests.map((t) => ({
+      id: t.id,
+      filePath: t.filePath,
+      testFilePath: t.testFilePath,
+      framework: t.framework,
+      content: t.content,
+    })),
   }));
 }
 

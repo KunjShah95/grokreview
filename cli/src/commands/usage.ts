@@ -92,6 +92,7 @@ export const usageCommand = new Command("usage")
       ["Groq", config.apiKeys.groq],
       ["Mistral", config.apiKeys.mistral],
       ["HuggingFace", config.apiKeys.huggingface],
+      ["Gemini", config.apiKeys.gemini],
       ["OpenRouter", config.apiKeys.openrouter],
     ];
     for (const [name, key] of keyEntries) {

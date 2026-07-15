@@ -6,7 +6,7 @@
 
 > **AI-powered Pull Request reviews. Use any model, any provider, any workflow.**
 
-GrokReview is a next-generation code review platform that connects to your GitHub repositories and automatically reviews every pull request using AI. It supports **5 AI providers** (Groq, Mistral, HuggingFace, OpenRouter, Ollama), has a **streaming SSE review engine**, **GitHub Actions CI integration**, an **analytics dashboard with heatmaps**, a **multi-model comparison tool**, and a full-featured **CLI**.
+GrokReview is a next-generation AI code review platform — CodeLens AI — that connects to your GitHub repositories and acts like a senior engineer on every pull request: explaining changes in plain English, catching bugs and security issues, generating unit tests, and answering questions about your codebase. It supports **6 AI providers** (Groq, Mistral, HuggingFace, Gemini, OpenRouter, Ollama), has a **streaming SSE review engine**, a **security scanner**, an **AI test generator**, **RAG chat over your repository**, a **code health dashboard**, **GitHub Actions CI integration**, an **analytics dashboard with heatmaps**, a **multi-model comparison tool**, a full-featured **CLI**, and an **MCP server** for use from Claude Code, Cursor, and other MCP clients.
 
 ---
 
@@ -18,8 +18,21 @@ GrokReview is a next-generation code review platform that connects to your GitHu
 | **Groq** | Llama 3 70B/8B, Mixtral, Gemma 2, DeepSeek R1 | ✅ Free |
 | **Mistral** | Mistral Large, Nemo, Codestral | ✅ Free tier |
 | **HuggingFace** | Zephyr 7B, Mistral 7B, Llama 3.2 3B, DeepSeek R1 | ✅ Free |
+| **Gemini** | Gemini 2.0 Flash, Flash Lite, 1.5 Pro | ✅ Free tier |
 | **OpenRouter** | 200+ models (gateway) | ✅ Free tier |
 | **Ollama** | Local models (llama3.2, codellama, phi3, qwen2.5-coder) | ✅ Free (local) |
+
+### 🛡️ Security Scanner
+Every PR is scanned automatically for hardcoded secrets (AWS/GitHub/Slack/Stripe keys, private keys, JWTs) via deterministic regex rules, plus an AI-assisted pass for SQL injection, XSS, SSRF, and insecure configuration. Findings show severity, category, and a suggested fix inline in the PR review.
+
+### 🧪 AI Test Generator
+Generates unit test scaffolds for a PR's changed source files, auto-detecting the framework (Vitest, pytest, Go `testing`, JUnit, RSpec) from file extensions. Copy the generated test straight into your branch.
+
+### 💬 Chat with Repository (RAG)
+Ask questions about a synced codebase in plain English — answers are grounded in your repo's indexed source with inline file citations, streamed token-by-token.
+
+### 📈 Code Health Dashboard
+Tracks average estimated complexity, hotspot files, open security debt, and estimated test coverage on every repo sync, with a trend chart over time.
 
 ### 📊 Dashboard
 - **Overview** — Real-time stats: total reviews, monthly usage, connected repos, plan status
@@ -111,6 +124,9 @@ MISTRAL_API_KEY=...
 # OR HuggingFace (free tier)
 HUGGINGFACE_API_KEY=hf_...
 
+# OR Gemini (free tier, aistudio.google.com/apikey)
+GEMINI_API_KEY=...
+
 # OR Ollama (fully local)
 # Just install Ollama and pull a model:
 # ollama pull llama3.2
@@ -139,6 +155,32 @@ npm run build
 npm link  # or: npm install -g .
 ```
 
+Published to npm as [`grokreview-cli`](https://www.npmjs.com/package/grokreview-cli) (binary: `pr-review`).
+
+---
+
+## 🔌 MCP Server
+
+Expose AI review, security scanning, and test generation as MCP tools — usable from Claude Code, Cursor, or any
+MCP-compatible client, without running the web app.
+
+```bash
+npm install -g grokreview-mcp
+```
+
+```json
+{
+  "mcpServers": {
+    "grokreview": {
+      "command": "grokreview-mcp",
+      "env": { "GITHUB_TOKEN": "ghp_...", "GROQ_API_KEY": "gsk_..." }
+    }
+  }
+}
+```
+
+Tools: `review_pr`, `scan_security`, `generate_tests`. See [`mcp/README.md`](mcp/README.md) for details.
+
 ---
 
 ## 🏗️ Architecture
@@ -150,29 +192,39 @@ npm link  # or: npm install -g .
 └──────────────┘     └─────────────┘     │     Jobs     │
                                          └──────┬───────┘
                                                 │
-┌──────────────┐     ┌─────────────┐            ▼
-│  Dashboard   │◀────│  Prisma DB  │◀────┌──────────────┐
-│  (Next.js)   │     │ (PostgreSQL)│     │   AI Review  │
-└──────────────┘     └─────────────┘     │   Pipeline   │
-                                          │              │
-┌──────────────┐     ┌─────────────┐     │  Groq        │
-│   CLI Tool   │────▶│  GitHub API │     │  Mistral     │
-│  (pr-review) │     │  (Octokit)  │     │  HuggingFace │
-└──────────────┘     └─────────────┘     │  OpenRouter  │
-                                          │  Ollama      │
-┌──────────────┐                          └──────────────┘
-│  GitHub      │
-│  Actions CI  │──────────────────────────▶ PR Comments
-└──────────────┘
+                          ┌─────────────────────┼──────────────────────┐
+                          ▼                     ▼                      ▼
+                 ┌────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+                 │  AI Review     │   │  Security Scan   │   │  Test Generator  │
+                 │  Pipeline      │   │  (regex + AI)    │   │  (AI)            │
+                 └────────┬───────┘   └────────┬─────────┘   └────────┬─────────┘
+                          └─────────────────────┼──────────────────────┘
+                                                 ▼
+┌──────────────┐     ┌─────────────┐     ┌──────────────┐
+│  Dashboard   │◀────│  Prisma DB  │◀────│   Pinecone   │◀── Chat with Repo (RAG)
+│  (Next.js)   │     │ (PostgreSQL)│     │  Vector DB   │◀── Code Health snapshots
+└──────────────┘     └─────────────┘     └──────────────┘
+
+┌──────────────┐     ┌─────────────┐     ┌──────────────────────────────┐
+│   CLI Tool   │────▶│  GitHub API │     │  AI Providers: Groq, Mistral,│
+│  (pr-review) │     │  (Octokit)  │     │  HuggingFace, Gemini,        │
+└──────────────┘     └─────────────┘     │  OpenRouter, Ollama          │
+                                          └──────────────────────────────┘
+┌──────────────┐                          ┌──────────────────────────────┐
+│  GitHub      │──────────▶ PR Comments   │  MCP Server (grokreview-mcp) │
+│  Actions CI  │                          │  review_pr · scan_security · │
+└──────────────┘                          │  generate_tests              │
+                                          └──────────────────────────────┘
 ```
 
 ### Key Technologies
 - **Frontend**: Next.js 16 (App Router), React 19, shadcn/ui, Tailwind CSS v4
 - **Backend**: Next.js API routes, Prisma 7 (PostgreSQL), Inngest (background jobs)
 - **Auth**: BetterAuth with GitHub OAuth
-- **AI**: Vercel AI SDK (Groq, Mistral, HuggingFace, OpenRouter) + Ollama HTTP API
-- **Vector DB**: Pinecone for code context
+- **AI**: Vercel AI SDK (Groq, Mistral, HuggingFace, Gemini, OpenRouter) + Ollama HTTP API
+- **Vector DB**: Pinecone for code context and RAG chat
 - **CLI**: Commander, Octokit, AI SDK
+- **MCP**: `@modelcontextprotocol/sdk` — exposes review/security/test-gen as tools
 
 ---
 
@@ -184,37 +236,49 @@ npm link  # or: npm install -g .
 │   ├── (protected)/dashboard/    # Dashboard pages
 │   │   ├── page.tsx              # Overview
 │   │   ├── analytics/            # Analytics + heatmap + leaderboard
+│   │   ├── chat/                 # Chat with Repository (RAG)
+│   │   ├── code-health/          # Code health dashboard
 │   │   ├── github/               # GitHub App management
-│   │   ├── pull-request/         # PR history
+│   │   ├── pull-request/         # PR history (review, security, tests)
 │   │   ├── repos/                # Repository list
 │   │   ├── settings/             # Settings (profile, models, prompts, integrations)
 │   │   ├── usage/                # Usage tracking
 │   │   └── webhooks/             # Webhook event log
 │   └── api/                      # API routes
+│       ├── chat/[owner]/[repo]/  # RAG chat SSE endpoint
+│       ├── code-health/[owner]/[repo]/ # Code health snapshot API
 │       ├── github/               # GitHub webhook, callback, CI review
 │       ├── reviews/stream/       # SSE streaming endpoint
 │       ├── reviews/compare/      # Multi-model comparison endpoint
+│       ├── security/scan/        # Manual security re-scan
+│       ├── test-gen/generate/    # Manual test regeneration
 │       └── webhooks/log/         # Webhook log API
 ├── components/                   # Shared UI components
 │   └── ui/                       # shadcn/ui components
 ├── features/                     # Feature modules
 │   ├── ai/                       # Multi-provider AI system
-│   │   ├── providers/            # Provider adapters (Groq, Mistral, etc.)
+│   │   ├── providers/            # Provider adapters (Groq, Mistral, Gemini, etc.)
 │   │   ├── registry.ts           # Provider registry
 │   │   ├── streaming.ts          # SSE streaming support
 │   │   └── types.ts              # AI model types
 │   ├── analytics/                # Analytics, heatmap, leaderboard
 │   ├── billing/                  # Subscription & usage
+│   ├── chat/                     # Chat with Repository (RAG)
+│   ├── code-health/              # Complexity/hotspot/security-debt snapshots
 │   ├── dashboard/                # Dashboard shell, sidebar, nav
 │   ├── github/                   # GitHub integration
 │   ├── integrations/             # Slack/Discord webhooks
 │   ├── prompts/                  # Custom review prompts
 │   ├── reviews/                  # Review pipeline, history, comparison
+│   ├── security/                 # Security scanner (secrets + vuln patterns + AI)
 │   ├── settings/                 # Settings types, model config
+│   ├── test-gen/                 # AI test generator
 │   ├── usage/                    # Usage tracking
 │   └── webhooks/                 # Webhook event log
-├── cli/                          # CLI tool (pr-review)
+├── cli/                          # CLI tool (pr-review) — published as grokreview-cli
 │   └── src/commands/             # review, models, config, batch, ci, usage
+├── mcp/                          # MCP server — published as grokreview-mcp
+│   └── src/tools/                # review_pr, scan_security, generate_tests
 ├── prisma/                       # Database schema & migrations
 └── lib/                          # Shared utilities
 ```

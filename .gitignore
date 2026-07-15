@@ -40,6 +40,10 @@ lib/generated/
 cli/dist/
 cli/package-lock.json
 
+# mcp build artifacts
+mcp/dist/
+mcp/package-lock.json
+
 # ide
 .vscode/
 .idea/

@@ -1,5 +1,11 @@
 # 🔎 CodeLens AI — Hackathon Execution Plan
 
+> **Status: Implemented.** Security Scanner, Test Generator, Chat-with-Repo, Code Health Dashboard, the
+> Gemini provider, and the MCP server described below have been built on this codebase — see `ROADMAP.md`
+> for the current feature list and `features/security`, `features/test-gen`, `features/chat`,
+> `features/code-health`, and `mcp/` for the implementations. This document is kept as the original
+> planning record.
+
 > **One-line pitch:** "CodeLens AI reviews your pull requests like a senior engineer — explaining, testing, and securing your code in plain English, in seconds."
 
 This document is the end-to-end build plan for the CodeLens AI hackathon submission. It is written against **this repository (GrokReview)**, because ~70% of the pitch is already built here: multi-provider AI reviews, GitHub App integration, streaming, a dashboard, and repo vector-sync. The plan below reframes the remaining CodeLens AI features (Security Scanner, Test Generator, Chat-with-Repo, Code Health Dashboard) as extensions of this codebase instead of a rewrite — that's the fastest path to a working demo in a time-boxed hackathon.

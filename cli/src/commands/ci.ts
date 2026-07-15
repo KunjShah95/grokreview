@@ -4,6 +4,7 @@ import { Octokit } from "octokit";
 import { generateText } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { loadConfig } from "../utils/config.js";
 
 const CI_SYSTEM_PROMPT = `You are a CI pipeline code reviewer. Review the provided diff and determine if it should pass or fail.
@@ -22,8 +23,8 @@ interface CICheckOptions {
   repo: string;
   model?: string;
   token?: string;
-  "fail-on-warnings"?: boolean;
-  "json-output"?: boolean;
+  failOnWarnings?: boolean;
+  jsonOutput?: boolean;
 }
 
 export const ciCommand = new Command("ci")
@@ -73,6 +74,9 @@ export const ciCommand = new Command("ci")
       switch (modelProvider) {
         case "groq":
           model = createGroq({ apiKey: config.apiKeys.groq || process.env.GROQ_API_KEY })(modelId);
+          break;
+        case "gemini":
+          model = createGoogleGenerativeAI({ apiKey: config.apiKeys.gemini || process.env.GEMINI_API_KEY })(modelId);
           break;
         case "openrouter":
           model = createOpenAI({ apiKey: config.apiKeys.openrouter || process.env.OPENROUTER_API_KEY, baseURL: "https://openrouter.ai/api/v1" })(modelId);
