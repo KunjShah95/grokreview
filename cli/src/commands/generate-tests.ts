@@ -153,8 +153,13 @@ export const generateTestsCommand = new Command("generate-tests")
         if (options.output) {
           const ext = path.extname(result.filePath) || ".txt";
           const baseName = path.basename(result.filePath, ext);
-          const outPath = path.join(options.output, `${baseName}.test${ext}`);
-          await fs.mkdir(options.output, { recursive: true });
+          // Preserve the source file's directory structure under the output
+          // dir so two changed files with the same name in different
+          // directories (e.g. src/utils/foo.ts and src/lib/foo.ts) don't
+          // silently overwrite each other's generated test.
+          const relDir = path.dirname(result.filePath);
+          const outPath = path.join(options.output, relDir, `${baseName}.test${ext}`);
+          await fs.mkdir(path.dirname(outPath), { recursive: true });
           await fs.writeFile(outPath, result.content, "utf-8");
           console.log(chalk.dim(`  📁 Saved to ${outPath}\n`));
         }

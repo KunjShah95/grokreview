@@ -92,6 +92,33 @@ class Widget:
     const source = `function ok() { return 1; }\nfunction broken( { `;
     await expect(getAstBoundaries("broken.js", source)).resolves.not.toThrow();
   });
+
+  it("parses concurrent calls for different languages correctly (regression: shared parser must not stomp a concurrent call's language)", async () => {
+    const tsSource = "export function tsFn() { return 1; }";
+    const pySource = "def py_fn():\n    return 1\n";
+    const jsSource = "function jsFn() { return 1; }";
+
+    // Fire many interleaved calls across 3 languages at once — with a
+    // single shared Parser instance, setLanguage() calls from one call
+    // could race ahead of another call's parse(), corrupting node types.
+    const calls = Array.from({ length: 20 }, (_, i) => {
+      const which = i % 3;
+      if (which === 0) return getAstBoundaries("a.ts", tsSource);
+      if (which === 1) return getAstBoundaries("a.py", pySource);
+      return getAstBoundaries("a.js", jsSource);
+    });
+
+    const results = await Promise.all(calls);
+
+    results.forEach((boundaries, i) => {
+      const which = i % 3;
+      expect(boundaries).not.toBeNull();
+      const types = boundaries!.map((b) => b.nodeType);
+      if (which === 0) expect(types).toContain("function_declaration");
+      else if (which === 1) expect(types).toContain("function_definition");
+      else expect(types).toContain("function_declaration");
+    });
+  });
 });
 
 describe("buildChunkRanges", () => {
@@ -129,17 +156,36 @@ describe("buildChunkRanges", () => {
     ]);
   });
 
-  it("appends member (method) ranges after top-level coverage", () => {
+  it("does not duplicate method text when the class fits in a single whole-class range", () => {
+    // The class is kept as one range (span 10 <= maxLines*3), so its methods'
+    // text is already fully covered — member ranges must not be added too,
+    // or the method text would be chunked (and embedded) twice.
     const ranges = buildChunkRanges(10, [
       { startLine: 0, endLine: 9, nodeType: "class_declaration", scope: "top-level" },
       { startLine: 1, endLine: 3, nodeType: "method_definition", scope: "member" },
       { startLine: 5, endLine: 7, nodeType: "method_definition", scope: "member" },
     ], 80);
 
+    expect(ranges).toEqual([{ startLine: 0, endLine: 9 }]);
+  });
+
+  it("still appends member (method) ranges when the class was split into windows", () => {
+    // maxLines=10, span of 35 lines exceeds the 3x safety threshold (30), so
+    // the class is split into windows that don't align with method
+    // boundaries — methods need their own ranges for fine-grained search.
+    const ranges = buildChunkRanges(35, [
+      { startLine: 0, endLine: 34, nodeType: "class_declaration", scope: "top-level" },
+      { startLine: 2, endLine: 4, nodeType: "method_definition", scope: "member" },
+      { startLine: 20, endLine: 25, nodeType: "method_definition", scope: "member" },
+    ], 10);
+
     expect(ranges).toEqual([
       { startLine: 0, endLine: 9 },
-      { startLine: 1, endLine: 3 },
-      { startLine: 5, endLine: 7 },
+      { startLine: 10, endLine: 19 },
+      { startLine: 20, endLine: 29 },
+      { startLine: 30, endLine: 34 },
+      { startLine: 2, endLine: 4 },
+      { startLine: 20, endLine: 25 },
     ]);
   });
 

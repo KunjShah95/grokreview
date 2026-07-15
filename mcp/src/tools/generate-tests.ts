@@ -5,6 +5,9 @@ import { resolveModel } from "../providers.js";
 
 const MAX_FILES = 3;
 
+// Mirrored (not imported) from features/test-gen/server/detect-framework.ts
+// and cli/src/utils/detect-framework.ts — see CONTRIBUTING.md for why this
+// isn't a shared package. Update all copies together.
 const EXTENSION_HINT: Array<{ extensions: string[]; framework: string; hint: string }> = [
   { extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs"], framework: "vitest", hint: "Use Vitest (`import { describe, it, expect } from 'vitest'`)." },
   { extensions: [".py"], framework: "pytest", hint: "Use pytest (plain `def test_...` functions with `assert`)." },

@@ -1,6 +1,12 @@
 import type { PrFile } from "@/features/reviews/types/review";
 import type { SecurityCategory, SecurityFindingInput, SecuritySeverity } from "../types";
 
+// Mirrored (not imported) in cli/src/utils/security-rules.ts and
+// mcp/src/security.ts — those are standalone published packages that can't
+// depend on this app's `@/` aliases or Prisma types. If you add/change a
+// rule here, update the other two files too. See CONTRIBUTING.md for why
+// this isn't a shared package.
+
 type VulnRule = {
   category: SecurityCategory;
   severity: SecuritySeverity;

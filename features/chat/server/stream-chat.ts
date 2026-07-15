@@ -45,7 +45,8 @@ export function streamChatResponse(params: {
           }
           send(event);
         }
-      } catch {
+      } catch (error) {
+        console.error("[Chat Stream] Stream failed:", error);
         send({ type: "error", data: "Chat stream error" });
       } finally {
         if (fullText.trim().length > 0) {

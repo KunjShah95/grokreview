@@ -96,7 +96,12 @@ export function detectAstLanguage(filePath: string): SupportedLang | null {
 
 let initPromise: Promise<void> | null = null;
 const languageCache = new Map<SupportedLang, Language>();
-let sharedParser: Parser | null = null;
+// One Parser instance per language, not a single shared instance — a shared
+// Parser's setLanguage() would let a concurrent call for language A stomp on
+// an in-flight parse for language B. Tree-sitter parsers are cheap to
+// construct, so keeping one per language (rather than one per call) is a
+// reasonable cache without the shared-mutable-state hazard.
+const parserCache = new Map<SupportedLang, Parser>();
 
 async function getParser(lang: SupportedLang): Promise<Parser> {
   if (!initPromise) {
@@ -115,11 +120,13 @@ async function getParser(lang: SupportedLang): Promise<Parser> {
     languageCache.set(lang, language);
   }
 
-  if (!sharedParser) {
-    sharedParser = new Parser();
+  let parser = parserCache.get(lang);
+  if (!parser) {
+    parser = new Parser();
+    parser.setLanguage(language);
+    parserCache.set(lang, parser);
   }
-  sharedParser.setLanguage(language);
-  return sharedParser;
+  return parser;
 }
 
 /** Unwraps `export`/`export default` to the declaration node it wraps, if any. */
@@ -251,6 +258,10 @@ export function buildChunkRanges(totalLines: number, boundaries: AstChunkBoundar
   const members = boundaries.filter((b) => b.scope === "member");
 
   const ranges: ChunkRange[] = [];
+  // Classes whose whole-class range got split into windows below — a split
+  // class's windows don't reliably align with method boundaries, so its
+  // methods still need their own ranges for fine-grained search.
+  const splitClasses: AstChunkBoundary[] = [];
   let cursor = 0;
 
   for (const boundary of topLevel) {
@@ -260,6 +271,7 @@ export function buildChunkRanges(totalLines: number, boundaries: AstChunkBoundar
     const span = boundary.endLine - boundary.startLine + 1;
     if (span > maxLines * 3) {
       ranges.push(...windowLines(boundary.startLine, boundary.endLine, maxLines));
+      splitClasses.push(boundary);
     } else {
       ranges.push({ startLine: boundary.startLine, endLine: boundary.endLine });
     }
@@ -270,8 +282,16 @@ export function buildChunkRanges(totalLines: number, boundaries: AstChunkBoundar
     ranges.push(...windowLines(cursor, totalLines - 1, maxLines));
   }
 
+  // Only add per-method ranges for classes that were split above — when a
+  // class was kept whole, its single range already contains every method's
+  // source text, so adding member ranges too would chunk that text twice.
   for (const member of members) {
-    ranges.push({ startLine: member.startLine, endLine: member.endLine });
+    const parentWasSplit = splitClasses.some(
+      (cls) => member.startLine >= cls.startLine && member.endLine <= cls.endLine
+    );
+    if (parentWasSplit) {
+      ranges.push({ startLine: member.startLine, endLine: member.endLine });
+    }
   }
 
   return ranges;

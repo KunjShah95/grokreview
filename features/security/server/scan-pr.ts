@@ -30,9 +30,14 @@ export async function scanPullRequest(
   files: PrFile[],
   modelPreference?: UserModelPreference
 ): Promise<SecurityFindingInput[]> {
+  // Kick off the AI-assisted pass first so its network round-trip overlaps
+  // with the synchronous regex scans below, instead of only starting after
+  // they finish.
+  const aiFindingsPromise = runAiSecurityScan(files, modelPreference);
+
   const secretFindings = scanForSecrets(files);
   const patternFindings = scanForVulnPatterns(files);
-  const aiFindings = await runAiSecurityScan(files, modelPreference);
+  const aiFindings = await aiFindingsPromise;
 
   return dedupeFindings([...secretFindings, ...patternFindings, ...aiFindings]);
 }

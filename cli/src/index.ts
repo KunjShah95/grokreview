@@ -2,6 +2,7 @@
 
 import { Command } from "commander";
 import chalk from "chalk";
+import path from "path";
 import { reviewCommand } from "./commands/review.js";
 import { modelsCommand } from "./commands/models.js";
 import { configCommand } from "./commands/config.js";
@@ -11,10 +12,19 @@ import { usageCommand } from "./commands/usage.js";
 import { scanCommand } from "./commands/scan.js";
 import { generateTestsCommand } from "./commands/generate-tests.js";
 
-// No explicit .name() — Commander infers it from how the binary was
-// invoked (argv[1]), so help text shows "grokreview" or "pr-review"
-// correctly no matter which of the two installed bin aliases was used.
+// Commander infers the program name from argv[1]'s basename, which gives
+// "grokreview" or "pr-review" correctly when run through one of the
+// installed bin symlinks. But a direct invocation (`node dist/index.js`,
+// `tsx src/index.ts`, a locally-linked dev build) makes argv[1] point at
+// the script itself, so Commander would show "index" in help/usage text
+// instead of a real product name. Fall back to "grokreview" unless argv[1]
+// resolves to one of the two known bin aliases.
+const KNOWN_BIN_NAMES = new Set(["grokreview", "pr-review"]);
+const invokedAs = path.basename(process.argv[1] ?? "", path.extname(process.argv[1] ?? ""));
+const programName = KNOWN_BIN_NAMES.has(invokedAs) ? invokedAs : "grokreview";
+
 const program = new Command()
+  .name(programName)
   .description("AI-powered GitHub Pull Request reviewer")
   .version("0.1.0")
   .option("--json-output", "Output results as JSON");

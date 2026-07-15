@@ -1,5 +1,9 @@
 import type { TestFramework } from "../types";
 
+// Mirrored (not imported) in cli/src/utils/detect-framework.ts and inlined
+// in mcp/src/tools/generate-tests.ts — see CONTRIBUTING.md for why this
+// isn't a shared package. Update all copies together when changing mappings.
+
 const EXTENSION_FRAMEWORK: Array<{ extensions: string[]; framework: TestFramework }> = [
   { extensions: [".ts", ".tsx", ".js", ".jsx", ".mjs"], framework: "vitest" },
   { extensions: [".py"], framework: "pytest" },

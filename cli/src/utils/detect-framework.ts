@@ -1,3 +1,6 @@
+// Mirrored (not imported) from features/test-gen/server/detect-framework.ts
+// and inlined in mcp/src/tools/generate-tests.ts — see CONTRIBUTING.md for
+// why this isn't a shared package. Update all copies together.
 export type FrameworkInfo = { framework: string; hint: string };
 
 const EXTENSION_HINT: Array<{ extensions: string[]; framework: string; hint: string }> = [

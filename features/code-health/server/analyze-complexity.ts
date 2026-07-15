@@ -44,7 +44,10 @@ export type ComplexitySummary = {
 export function computeComplexitySummary(files: RepoFile[]): ComplexitySummary {
   const sourceFiles = files.filter((f) => !TEST_FILE_PATTERN.test(f.filePath));
   const testFiles = files.filter((f) => TEST_FILE_PATTERN.test(f.filePath));
-  const testFilePaths = new Set(testFiles.map((f) => f.filePath.toLowerCase()));
+  // Plain array, not a Set: the lookup below is a substring .includes() match,
+  // not an exact-match lookup, so a Set's O(1) benefit is never actually used —
+  // it was just being reallocated into an array on every source file anyway.
+  const testFilePaths = testFiles.map((f) => f.filePath.toLowerCase());
 
   const complexities = sourceFiles.map(analyzeFileComplexity);
   const hotspots = complexities
@@ -59,7 +62,8 @@ export function computeComplexitySummary(files: RepoFile[]): ComplexitySummary {
 
   const filesWithLikelyTest = sourceFiles.filter((file) => {
     const base = file.filePath.replace(/\.[^./]+$/, "").toLowerCase();
-    return [...testFilePaths].some((testPath) => testPath.includes(base.split("/").pop() ?? base));
+    const baseName = base.split("/").pop() ?? base;
+    return testFilePaths.some((testPath) => testPath.includes(baseName));
   }).length;
 
   const testCoverageEst =

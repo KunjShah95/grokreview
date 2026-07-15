@@ -1,7 +1,13 @@
 import type { PrFile } from "./pr-files.js";
 
+// Mirrored (not imported) from features/security/rules/{patterns,secrets}.ts —
+// this is a standalone published package and can't depend on the web app's
+// `@/` aliases or Prisma types. If you add/change a rule here, update the
+// web app copy and mcp/src/security.ts too. See CONTRIBUTING.md for why
+// this isn't a shared package.
+
 export type SecuritySeverity = "critical" | "high" | "medium" | "low" | "info";
-export type SecurityCategory = "secret" | "sql-injection" | "xss" | "ssrf" | "insecure-config" | "other";
+export type SecurityCategory = "secret" | "sql-injection" | "xss" | "ssrf" | "dependency" | "insecure-config" | "other";
 
 export type SecurityFinding = {
   filePath: string;
@@ -46,14 +52,14 @@ const VULN_RULES: VulnRule[] = [
     severity: "high",
     pattern: /(query|execute)\s*\([^)]*(\$\{|['"`]\s*\+|\+\s*['"`])/i,
     message: "Possible SQL injection: query built via string concatenation or interpolation instead of a parameterized query.",
-    suggestion: "Use parameterized queries / prepared statements instead of interpolating values into the SQL string.",
+    suggestion: "Use parameterized queries / prepared statements (e.g. `db.query('... WHERE id = $1', [id])`) instead of interpolating values into the SQL string.",
   },
   {
     category: "xss",
     severity: "high",
     pattern: /dangerouslySetInnerHTML|\.innerHTML\s*=(?!\s*["'`]\s*["'`])|document\.write\s*\(/,
     message: "Possible XSS: raw HTML is being injected into the DOM without sanitization.",
-    suggestion: "Sanitize the HTML (e.g. with DOMPurify) before rendering.",
+    suggestion: "Sanitize the HTML (e.g. with DOMPurify) before rendering, or avoid raw HTML injection entirely.",
   },
   {
     category: "ssrf",
@@ -75,6 +81,13 @@ const VULN_RULES: VulnRule[] = [
     pattern: /eval\s*\(|new Function\s*\(/,
     message: "Use of eval()/Function() constructor — can execute arbitrary code if input is attacker-influenced.",
     suggestion: "Avoid eval/Function; use JSON.parse or an explicit parser for structured data.",
+  },
+  {
+    category: "insecure-config",
+    severity: "low",
+    pattern: /child_process\.(exec|execSync)\s*\(\s*(`[^`]*\$\{|['"]\s*\+)/,
+    message: "Shell command built via string concatenation — possible command injection.",
+    suggestion: "Use execFile/spawn with an argument array instead of building a shell string, or strictly validate the input.",
   },
 ];
 
