@@ -4,6 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { reviewPr, reviewPrInputSchema } from "./tools/review-pr.js";
 import { scanSecurity, scanSecurityInputSchema } from "./tools/scan-security.js";
 import { generateTests, generateTestsInputSchema } from "./tools/generate-tests.js";
+import { chatWithRepo, chatWithRepoInputSchema } from "./tools/chat-with-repo.js";
 
 const server = new McpServer({
   name: "grokreview-mcp",
@@ -41,6 +42,19 @@ server.registerTool(
     inputSchema: generateTestsInputSchema,
   },
   generateTests
+);
+
+server.registerTool(
+  "chat_with_repo",
+  {
+    title: "Chat with a synced repository",
+    description:
+      "Asks a question about a repository's indexed codebase (RAG) via a running GrokReview deployment. " +
+      "Requires GROKREVIEW_API_URL and MCP_BRIDGE_API_KEY to be set — unlike the other tools, this one " +
+      "needs a hosted GrokReview instance with the repo already synced (it can't run fully standalone).",
+    inputSchema: chatWithRepoInputSchema,
+  },
+  chatWithRepo
 );
 
 async function main() {

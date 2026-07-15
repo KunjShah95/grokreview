@@ -29,7 +29,7 @@ Every PR is scanned automatically for hardcoded secrets (AWS/GitHub/Slack/Stripe
 Generates unit test scaffolds for a PR's changed source files, auto-detecting the framework (Vitest, pytest, Go `testing`, JUnit, RSpec) from file extensions. Copy the generated test straight into your branch.
 
 ### 💬 Chat with Repository (RAG)
-Ask questions about a synced codebase in plain English — answers are grounded in your repo's indexed source with inline file citations, streamed token-by-token.
+Ask questions about a synced codebase in plain English — answers are grounded in your repo's indexed source with inline file citations, streamed token-by-token. Synced files are chunked along function/class/method boundaries (via Tree-sitter, for JS/TS/TSX/Python) rather than fixed-size line windows, so retrieved context stays semantically coherent.
 
 ### 📈 Code Health Dashboard
 Tracks average estimated complexity, hotspot files, open security debt, and estimated test coverage on every repo sync, with a trend chart over time.
@@ -227,8 +227,9 @@ Tools: `review_pr`, `scan_security`, `generate_tests`. See [`mcp/README.md`](mcp
 - **Auth**: BetterAuth with GitHub OAuth
 - **AI**: Vercel AI SDK (Groq, Mistral, HuggingFace, Gemini, OpenRouter) + Ollama HTTP API
 - **Vector DB**: Pinecone for code context and RAG chat
+- **Code parsing**: `web-tree-sitter` — AST-aware chunking (JS/TS/TSX/Python) for synced repos
 - **CLI**: Commander, Octokit, AI SDK
-- **MCP**: `@modelcontextprotocol/sdk` — exposes review/security/test-gen as tools
+- **MCP**: `@modelcontextprotocol/sdk` — exposes review/security/test-gen/chat as tools
 
 ---
 

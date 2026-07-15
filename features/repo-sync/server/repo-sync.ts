@@ -4,6 +4,7 @@ import { getGithubApp } from "@/features/github/utils/github-app";
 import { getPineconeIndex } from "@/features/pinecone/client";
 import { prisma } from "@/lib/db";
 import { inngest } from "@/features/inngest/client";
+import { getAstBoundaries, buildChunkRanges } from "@/features/reviews/utils/ast-chunk";
 
 const MAX_FILE_SIZE_BYTES = 100_000;
 const MAX_FILES = 200;
@@ -56,19 +57,49 @@ function buildChunkId(filePath: string, part: number) {
   return `repo--${filePath}--part-${part}`;
 }
 
-export function chunkRepoFiles(files: RepoFile[]): CodeChunk[] {
+/** Line-window chunking — used as a fallback when AST parsing is unavailable or fails. */
+function chunkFileByLines(file: RepoFile): CodeChunk[] {
+  const chunks: CodeChunk[] = [];
+  const lines = file.content.split("\n");
+  for (let start = 0; start < lines.length; start += MAX_CHUNK_LINES) {
+    const part = start / MAX_CHUNK_LINES;
+    const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n");
+    chunks.push({
+      id: buildChunkId(file.filePath, part),
+      filePath: file.filePath,
+      text,
+    });
+  }
+  return chunks;
+}
+
+/**
+ * Chunks a synced repo file along function/class boundaries (via Tree-sitter)
+ * when the language is supported, so each chunk is a semantically coherent
+ * unit instead of an arbitrary 80-line window — this measurably improves
+ * both review context and RAG chat retrieval quality. Falls back to plain
+ * line windowing for unsupported languages or if parsing fails.
+ */
+async function chunkFile(file: RepoFile): Promise<CodeChunk[]> {
+  const boundaries = await getAstBoundaries(file.filePath, file.content);
+  if (!boundaries) {
+    return chunkFileByLines(file);
+  }
+
+  const lines = file.content.split("\n");
+  const ranges = buildChunkRanges(lines.length, boundaries, MAX_CHUNK_LINES);
+
+  return ranges.map((range, part) => ({
+    id: buildChunkId(file.filePath, part),
+    filePath: file.filePath,
+    text: lines.slice(range.startLine, range.endLine + 1).join("\n"),
+  }));
+}
+
+export async function chunkRepoFiles(files: RepoFile[]): Promise<CodeChunk[]> {
   const chunks: CodeChunk[] = [];
   for (const file of files) {
-    const lines = file.content.split("\n");
-    for (let start = 0; start < lines.length; start += MAX_CHUNK_LINES) {
-      const part = start / MAX_CHUNK_LINES;
-      const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n");
-      chunks.push({
-        id: buildChunkId(file.filePath, part),
-        filePath: file.filePath,
-        text,
-      });
-    }
+    chunks.push(...(await chunkFile(file)));
   }
   return chunks;
 }

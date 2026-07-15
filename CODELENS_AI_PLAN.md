@@ -1,10 +1,11 @@
 # 🔎 CodeLens AI — Hackathon Execution Plan
 
 > **Status: Implemented.** Security Scanner, Test Generator, Chat-with-Repo, Code Health Dashboard, the
-> Gemini provider, and the MCP server described below have been built on this codebase — see `ROADMAP.md`
-> for the current feature list and `features/security`, `features/test-gen`, `features/chat`,
-> `features/code-health`, and `mcp/` for the implementations. This document is kept as the original
-> planning record.
+> Gemini provider, Tree-sitter AST-aware chunking, and the MCP server (including its `chat_with_repo`
+> bridge tool) described below have been built on this codebase — see `ROADMAP.md` for the current feature
+> list and `features/security`, `features/test-gen`, `features/chat`, `features/code-health`,
+> `features/reviews/utils/ast-chunk.ts`, and `mcp/` for the implementations. This document is kept as the
+> original planning record.
 
 > **One-line pitch:** "CodeLens AI reviews your pull requests like a senior engineer — explaining, testing, and securing your code in plain English, in seconds."
 

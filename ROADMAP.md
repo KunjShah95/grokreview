@@ -153,8 +153,10 @@
 - [x] **AI Test Generator** — generates unit test scaffolds for a PR's changed files, auto-detecting framework (Vitest, pytest, Go testing, JUnit, RSpec), with copy-to-clipboard preview
 - [x] **Chat with Repository (RAG)** — SSE-streamed Q&A over a synced codebase with inline file citations, session history persisted per user/repo
 - [x] **Code Health Dashboard** — complexity trend chart, hotspot files, open security debt, estimated test coverage, computed automatically on every repo sync
-- [x] **MCP Server** (`grokreview-mcp`) — exposes `review_pr`, `scan_security`, `generate_tests` as MCP tools for Claude Code/Cursor
-- [x] **npm-publishable CLI and MCP packages** — pinned AI-SDK provider versions for a reproducible, working build
+- [x] **MCP Server** (`grokreview-mcp`) — exposes `review_pr`, `scan_security`, `generate_tests`, and `chat_with_repo` (via an API-key-authed bridge to a running deployment) as MCP tools for Claude Code/Cursor
+- [x] **npm-publishable CLI and MCP packages** — pinned AI-SDK provider versions for a reproducible, working build; CLI published as `grokreview` (with a `pr-review` alias) with `scan`/`generate-tests` commands matching the MCP tools
+- [x] **Security findings posted to GitHub** — critical/high findings are folded into the posted PR review; a leaked secret escalates the review to `REQUEST_CHANGES` (heuristic vuln patterns stay comment-only to avoid false-positive blocks)
+- [x] **Tree-sitter AST-aware chunking** — synced repo files are chunked along function/class/method boundaries (JS/TS/TSX/Python) instead of fixed 80-line windows, improving both review context and RAG retrieval quality; falls back to line-based chunking for unsupported languages or parse failures. PR diffs stay line-based (a diff hunk is a fragment, not parseable as standalone source).
 
 ---
 

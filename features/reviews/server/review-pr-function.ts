@@ -9,6 +9,7 @@ import { buildPrNamespace, saveChunksToPinecone, searchPrContext } from "./vecto
 import { buildRepoNamespace } from "@/features/repo-sync/server/repo-sync";
 import { getUserIdByInstallationId } from "@/features/github/server/installation";
 import { scanPullRequest, saveSecurityFindings } from "@/features/security/server/scan-pr";
+import { formatFindingsForReview, hasLeakedSecret } from "@/features/security/format-findings";
 import { generateTestsForPr } from "@/features/test-gen/server/generate-tests";
 import { saveGeneratedTests } from "@/features/test-gen/server/save-tests";
 
@@ -37,9 +38,10 @@ export const reviewPullRequest = inngest.createFunction(
       return chunkPrFiles(pullRequest.prNumber, files);
     });
 
-    await step.run("scan-security", async () => {
+    const securityFindings = await step.run("scan-security", async () => {
       const findings = await scanPullRequest(files);
       await saveSecurityFindings(pullRequestId, findings);
+      return findings;
     });
 
     await step.run("generate-tests", async () => {
@@ -106,14 +108,22 @@ export const reviewPullRequest = inngest.createFunction(
       if (!review) {
         throw new Error("No review content was generated.");
       }
-      const reviewBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}`;
+      const securitySection = formatFindingsForReview(securityFindings);
+      const reviewBody = `## 🤖 GrokReview\n\n**Model:** ${review.model}\n\n${review.text}${securitySection}`;
+
+      // Escalate to REQUEST_CHANGES only for leaked secrets — the one
+      // security category with near-zero false positives. Heuristic
+      // vulnerability patterns (SQLi/XSS/SSRF) stay COMMENT-only since
+      // they can misfire and shouldn't silently block a merge.
+      const event = hasLeakedSecret(securityFindings) ? "REQUEST_CHANGES" : "COMMENT";
+
       try {
         await submitFormalReview(
           pullRequest.installationId,
           pullRequest.repoFullName,
           pullRequest.prNumber,
           reviewBody,
-          "COMMENT"
+          event
         );
       } catch (error) {
         console.warn(
