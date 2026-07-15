@@ -37,6 +37,7 @@ const eslintConfig = [
       "node_modules/**",
       "lib/generated/**",
       "cli/**",
+      "mcp/**",
     ],
   },
 ];

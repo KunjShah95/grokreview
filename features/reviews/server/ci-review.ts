@@ -1,5 +1,8 @@
 import { generateWithProvider, getDefaultModel } from "@/features/ai";
 import { Octokit } from "octokit";
+import { scanPullRequest } from "@/features/security/server/scan-pr";
+import { formatFindingsForReview, hasLeakedSecret } from "@/features/security/format-findings";
+import type { PrFile } from "@/features/reviews/types/review";
 
 type CIReviewInput = {
   owner: string;
@@ -16,7 +19,37 @@ type CIReviewResult = {
   summary?: string;
   model?: string;
   error?: string;
+  /** true if a leaked secret was found — the CI workflow should fail its check on this, independent of `status`. */
+  securityBlocked?: boolean;
 };
+
+const FILES_PER_PAGE = 100;
+
+/**
+ * Fetches per-file unified diffs for security scanning. Separate from the
+ * single full-diff fetch below (which feeds the review prompt directly) —
+ * the scanner needs structured per-file patches, not one diff blob.
+ */
+async function getPrFilesForCi(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  prNumber: number
+): Promise<PrFile[]> {
+  // paginate() follows every page — a single per_page=100 request silently
+  // truncated the scanned file list for PRs touching more than 100 files.
+  const data = await octokit.paginate(
+    "GET /repos/{owner}/{repo}/pulls/{pull_number}/files",
+    { owner, repo, pull_number: prNumber, per_page: FILES_PER_PAGE }
+  );
+
+  const files: PrFile[] = [];
+  for (const file of data) {
+    if (!file.patch) continue;
+    files.push({ filePath: file.filename, patch: file.patch });
+  }
+  return files;
+}
 
 const SYSTEM_PROMPT = `You are an expert code reviewer integrated into a CI pipeline.
 Review the provided unified diff and write a concise, actionable pull request review in markdown.
@@ -124,13 +157,27 @@ ${truncatedDiff}
     };
   }
 
+  // Security scan — same rules as the main webhook-triggered pipeline, so a
+  // PR reviewed via CI gets the same secret/vulnerability protection as one
+  // reviewed via the GitHub App. Best-effort: a scan failure shouldn't fail
+  // the whole CI review, since the plain review text is still useful on its own.
+  let securityFindings: Awaited<ReturnType<typeof scanPullRequest>> = [];
+  try {
+    const files = await getPrFilesForCi(octokit, owner, repo, prNumber);
+    securityFindings = await scanPullRequest(files);
+  } catch (error) {
+    console.warn("[CI Review] Security scan failed, continuing with review only:", error);
+  }
+
+  const fullReviewText = `${reviewText}${formatFindingsForReview(securityFindings)}`;
+
   // Post the review as a PR comment
   try {
     await octokit.rest.issues.createComment({
       owner,
       repo,
       issue_number: prNumber,
-      body: `## 🤖 GrokReview\n\n**Model:** ${provider}/${modelId}\n\n${reviewText}\n\n---\n*Automated review via GrokReview CI*`,
+      body: `## 🤖 GrokReview\n\n**Model:** ${provider}/${modelId}\n\n${fullReviewText}\n\n---\n*Automated review via GrokReview CI*`,
     });
   } catch (error) {
     console.warn("Failed to post PR comment (GITHUB_TOKEN may lack write permissions):", error);
@@ -142,8 +189,9 @@ ${truncatedDiff}
 
   return {
     status: "reviewed",
-    review: reviewText,
+    review: fullReviewText,
     summary,
     model: `${provider}/${modelId}`,
+    securityBlocked: hasLeakedSecret(securityFindings),
   };
 }

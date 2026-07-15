@@ -177,6 +177,31 @@ When adding a new AI provider:
 3. Register in `features/ai/registry.ts`
 4. Add model costs to `features/usage/server/usage-stats.ts` (if applicable)
 
+### Security rules and framework detection (three copies, kept intentionally separate)
+
+Two bits of logic are independently reimplemented, not shared, across the web app, CLI, and MCP
+server:
+
+- Regex-based secret/vulnerability rules: `features/security/rules/{patterns,secrets}.ts` (web
+  app), `cli/src/utils/security-rules.ts` (published `grokreview` CLI), `mcp/src/security.ts`
+  (published `grokreview-mcp` server).
+- Test-framework detection by file extension: `features/test-gen/server/detect-framework.ts`
+  (web app), `cli/src/utils/detect-framework.ts` (CLI), inlined in
+  `mcp/src/tools/generate-tests.ts` (MCP).
+
+These are **not** meant to be unified into a shared package right now. The CLI and MCP server
+are already-published, standalone npm packages with their own build pipelines (and their own
+hard-won AI-SDK version pinning and bundling fixes — see `CASE_STUDY.md`); the web app's copies
+import `@/` path-aliased types and Prisma-adjacent code that the standalone packages
+deliberately can't depend on, and each package's version has already diverged in shape (e.g. the
+CLI/MCP security rules combine secrets+patterns into one file with a different return type; the
+CLI/MCP framework detection returns a hint string the web app doesn't need). Extracting shared
+`@grokreview/security-core` / `@grokreview/testgen-core` packages would mean adding npm workspace
+tooling and touching both publish pipelines for the sake of a few hundred lines total that have
+drifted only once in this project's history — not worth the risk at this stage. If you add or
+change a rule/framework mapping, update all copies in the same PR (a CI check that diffs the rule
+arrays across copies would catch drift automatically, if this becomes a recurring problem).
+
 ---
 
 ## Testing

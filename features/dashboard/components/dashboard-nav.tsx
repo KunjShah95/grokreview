@@ -9,6 +9,8 @@ import {
   ChartBar,
   ChartLine,
   ArrowsClockwise,
+  ChatCircleText,
+  Heartbeat,
 } from "@phosphor-icons/react";
 import {
   DASHBOARD_NAV_ITEMS,
@@ -31,6 +33,8 @@ const NAV_ICONS = {
   "chart-bar": ChartBar,
   "chart-line": ChartLine,
   "webhooks": ArrowsClockwise,
+  chat: ChatCircleText,
+  heartbeat: Heartbeat,
 } as const;
 
 function isNavActive(pathname: string, href: DashboardRoute) {

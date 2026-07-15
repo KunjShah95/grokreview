@@ -20,6 +20,7 @@ const PROVIDER_META: Record<AIProvider, { label: string; docs: string; keyName: 
   groq: { label: "Groq", docs: "console.groq.com/keys", keyName: "GROQ_API_KEY" },
   mistral: { label: "Mistral AI", docs: "console.mistral.ai/api-keys", keyName: "MISTRAL_API_KEY" },
   huggingface: { label: "HuggingFace", docs: "huggingface.co/settings/tokens", keyName: "HUGGINGFACE_API_KEY" },
+  gemini: { label: "Gemini", docs: "aistudio.google.com/apikey", keyName: "GEMINI_API_KEY" },
   ollama: { label: "Ollama (Local)", docs: "ollama.com/download", keyName: "" },
 };
 
@@ -187,7 +188,7 @@ npm run dev`}
       <CardFooter>
         <p className="text-xs text-muted-foreground">
           The AI system will auto-detect which providers are configured and use the first available one.
-          Priority order: Groq → Mistral → HuggingFace → OpenRouter → Ollama.
+          Priority order: Groq → Mistral → HuggingFace → Gemini → OpenRouter → Ollama.
         </p>
       </CardFooter>
     </Card>

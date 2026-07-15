@@ -44,3 +44,31 @@ export async function getUsageSummary(userId: string): Promise<UsageSummary> {
 
   return { used, limit: FREE_MONTHLY_LIMIT };
 }
+
+/**
+ * Other AI-assisted actions (security re-scan, test generation, repo chat)
+ * share their own free-tier quota — separate from the "5 reviews/month"
+ * quota above, since none of these actions ever change a PullRequest's
+ * status to "reviewed" and so never move the needle on getReviewsThisMonth.
+ */
+export type AiActionKind = "security_scan" | "test_gen" | "chat";
+
+export async function getAiActionsThisMonth(userId: string): Promise<number> {
+  return prisma.aiActionUsage.count({
+    where: { userId, createdAt: { gte: startOfMonth(new Date()) } },
+  });
+}
+
+export async function canPerformAiAction(userId: string): Promise<boolean> {
+  const subscription = await getUserSubscription(userId);
+  if (subscription.plan === "pro" && subscription.status === "active") {
+    return true;
+  }
+  const used = await getAiActionsThisMonth(userId);
+  return used < FREE_MONTHLY_LIMIT;
+}
+
+/** Records a completed AI action (scan/test-gen/chat message) against the monthly quota above. */
+export async function recordAiAction(userId: string, kind: AiActionKind): Promise<void> {
+  await prisma.aiActionUsage.create({ data: { userId, kind } });
+}

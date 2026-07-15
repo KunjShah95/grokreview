@@ -1,5 +1,11 @@
 import type { CodeChunk, PrFile } from "@/features/reviews/types/review";
 
+// Deliberately NOT using AST-based chunking (see features/reviews/utils/ast-chunk.ts,
+// used by repo-sync's chunkRepoFiles) here: `file.patch` is a unified diff hunk, not
+// standalone valid source — it's often a disconnected fragment of the real file (only
+// the changed lines plus a few lines of surrounding context), so parsing it as if it
+// were complete syntax would produce unreliable boundaries. Full-file content (as
+// repo-sync has) is where AST-aware chunking is trustworthy; diffs stay line-windowed.
 const MAX_CHUNK_LINES = 80;
 
 function buildChunkId(prNumber: number, filePath: string, part: number) {

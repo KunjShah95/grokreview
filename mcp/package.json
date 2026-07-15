@@ -1,0 +1,65 @@
+{
+  "name": "grokreview-mcp",
+  "version": "0.1.0",
+  "description": "GrokReview MCP server — expose AI PR review, security scanning, and test generation as MCP tools for Claude Code, Cursor, and other MCP-compatible clients.",
+  "type": "module",
+  "bin": {
+    "grokreview-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "prepublishOnly": "npm run build",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@ai-sdk/groq": "^3.0.52",
+    "@ai-sdk/huggingface": "^1.0.62",
+    "@ai-sdk/mistral": "^3.0.49",
+    "@ai-sdk/openai": "^3.0.85",
+    "@ai-sdk/google": "^3.0.93",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai": "^6.0.205",
+    "octokit": "^5.0.5",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pr-review",
+    "code-review",
+    "github",
+    "ai",
+    "security-scanner",
+    "test-generation",
+    "claude",
+    "cursor"
+  ],
+  "author": "Kunj Shah",
+  "license": "MIT",
+  "homepage": "https://github.com/KunjShah95/grokreview#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KunjShah95/grokreview.git",
+    "directory": "mcp"
+  },
+  "bugs": {
+    "url": "https://github.com/KunjShah95/grokreview/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

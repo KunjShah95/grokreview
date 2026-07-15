@@ -34,9 +34,22 @@ model User {
   accounts            Account[]
   githubInstallation  GithubInstallation?
   usageAlerts         UsageAlert[]
+  chatSessions        ChatSession[]
+  aiActionUsage       AiActionUsage[]
 
   @@unique([email])
   @@map("user")
+}
+
+model AiActionUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String   // security_scan | test_gen | chat
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("ai_action_usage")
 }
 
 model GithubInstallation {
@@ -66,12 +79,92 @@ model PullRequest {
   model            String?  // AI model used for review (e.g. "groq/llama3-70b-8192")
   reviewComment    String?  // AI-generated markdown saved after review completes
   reviewedAt       DateTime?
+  complexityScore  Int?     // estimated review complexity, 1-10
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  securityFindings SecurityFinding[]
+  generatedTests   GeneratedTest[]
+
   @@unique([repoFullName, prNumber])
   @@map("pull_request")
+}
+
+model SecurityFinding {
+  id            String      @id @default(cuid())
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  filePath      String
+  line          Int?
+  severity      String      // critical | high | medium | low | info
+  category      String      // secret | sql-injection | xss | ssrf | dependency | insecure-config
+  message       String
+  suggestion    String?
+  resolved      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+
+  @@index([pullRequestId])
+  @@map("security_finding")
+}
+
+model GeneratedTest {
+  id            String      @id @default(cuid())
+  pullRequestId String
+  pullRequest   PullRequest @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  filePath      String      // source file the test targets
+  testFilePath  String      // suggested path for the generated test
+  framework     String      // vitest | jest | pytest | go-test | ...
+  content       String      // generated test code
+  createdAt     DateTime    @default(now())
+
+  @@index([pullRequestId])
+  @@map("generated_test")
+}
+
+model ChatSession {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  repoFullName String
+  title        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  messages     ChatMessage[]
+
+  // Enforces "one session per (user, repo)" at the DB level so concurrent
+  // requests can't race a find-then-create into two sessions that split
+  // chat history — see getOrCreateChatSession's upsert.
+  @@unique([userId, repoFullName])
+  @@map("chat_session")
+}
+
+model ChatMessage {
+  id            String      @id @default(cuid())
+  chatSessionId String
+  chatSession   ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+  role          String      // user | assistant
+  content       String
+  citedChunks   Json?       // source file/line citations returned with the answer
+  createdAt     DateTime    @default(now())
+
+  @@index([chatSessionId])
+  @@map("chat_message")
+}
+
+model CodeHealthSnapshot {
+  id              String   @id @default(cuid())
+  repoFullName    String
+  complexityAvg   Float    // average estimated cyclomatic complexity across synced files
+  hotspotCount    Int      // files flagged as high churn + high complexity
+  hotspots        Json?    // top hotspot files (filePath, complexity, lines) for this snapshot
+  securityDebt    Int      // open (unresolved) SecurityFinding count
+  testCoverageEst Float?   // heuristic estimate, not measured
+  filesAnalyzed   Int      @default(0)
+  computedAt      DateTime @default(now())
+
+  @@index([repoFullName, computedAt])
+  @@map("code_health_snapshot")
 }
 
 model RepoSync {

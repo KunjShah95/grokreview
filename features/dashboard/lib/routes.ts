@@ -4,6 +4,8 @@ export const DASHBOARD_ROUTES = {
   pullRequest: "/dashboard/pull-request",
   usage: "/dashboard/usage",
   analytics: "/dashboard/analytics",
+  chat: "/dashboard/chat",
+  codeHealth: "/dashboard/code-health",
   github: "/dashboard/github",
   webhooks: "/dashboard/webhooks",
   settings: "/dashboard/settings",
@@ -37,6 +39,16 @@ export const DASHBOARD_NAV_ITEMS = [
     title: "Analytics",
     href: DASHBOARD_ROUTES.analytics,
     icon: "chart-line" as const,
+  },
+  {
+    title: "Chat with Repo",
+    href: DASHBOARD_ROUTES.chat,
+    icon: "chat" as const,
+  },
+  {
+    title: "Code Health",
+    href: DASHBOARD_ROUTES.codeHealth,
+    icon: "heartbeat" as const,
   },
   {
     title: "GitHub App",

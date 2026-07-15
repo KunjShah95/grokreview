@@ -8,6 +8,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createMistral } from "@ai-sdk/mistral";
 import { createHuggingFace } from "@ai-sdk/huggingface";
 import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const SYSTEM_PROMPT = `You are an expert code reviewer. Review the provided unified diff and write a concise, actionable pull request review in markdown. Analyze: correctness, security, performance, reliability, readability, and maintainability. Start with a one-line summary, then use sections: ✅ What looks good, ⚠️ Suggestions, 🚨 Issues.`;
 
@@ -98,6 +99,9 @@ export const batchCommand = new Command("batch")
               break;
             case "huggingface":
               model = createHuggingFace({ apiKey: config.apiKeys.huggingface })(modelId);
+              break;
+            case "gemini":
+              model = createGoogleGenerativeAI({ apiKey: config.apiKeys.gemini })(modelId);
               break;
             case "openrouter":
               model = createOpenAI({ apiKey: config.apiKeys.openrouter, baseURL: "https://openrouter.ai/api/v1" })(modelId);

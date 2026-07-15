@@ -1,0 +1,21 @@
+{
+  "version": "7.8",
+  "steps": [
+    { "tag": "AddColumn", "tableName": "pull_request", "columnName": "complexityScore" },
+    { "tag": "CreateTable", "tableName": "security_finding" },
+    { "tag": "CreateTable", "tableName": "generated_test" },
+    { "tag": "CreateTable", "tableName": "chat_session" },
+    { "tag": "CreateTable", "tableName": "chat_message" },
+    { "tag": "CreateTable", "tableName": "code_health_snapshot" },
+    { "tag": "CreateIndex", "indexName": "security_finding_pullRequestId_idx", "tableName": "security_finding", "columns": ["pullRequestId"] },
+    { "tag": "CreateIndex", "indexName": "generated_test_pullRequestId_idx", "tableName": "generated_test", "columns": ["pullRequestId"] },
+    { "tag": "CreateIndex", "indexName": "chat_session_userId_repoFullName_idx", "tableName": "chat_session", "columns": ["userId", "repoFullName"] },
+    { "tag": "CreateIndex", "indexName": "chat_message_chatSessionId_idx", "tableName": "chat_message", "columns": ["chatSessionId"] },
+    { "tag": "CreateIndex", "indexName": "code_health_snapshot_repoFullName_computedAt_idx", "tableName": "code_health_snapshot", "columns": ["repoFullName", "computedAt"] },
+    { "tag": "AddForeignKey", "foreignKeyName": "security_finding_pullRequestId_fkey", "tableName": "security_finding", "columnName": "pullRequestId", "referencedTableName": "pull_request", "referencedColumnName": "id" },
+    { "tag": "AddForeignKey", "foreignKeyName": "generated_test_pullRequestId_fkey", "tableName": "generated_test", "columnName": "pullRequestId", "referencedTableName": "pull_request", "referencedColumnName": "id" },
+    { "tag": "AddForeignKey", "foreignKeyName": "chat_session_userId_fkey", "tableName": "chat_session", "columnName": "userId", "referencedTableName": "user", "referencedColumnName": "id" },
+    { "tag": "AddForeignKey", "foreignKeyName": "chat_message_chatSessionId_fkey", "tableName": "chat_message", "columnName": "chatSessionId", "referencedTableName": "chat_session", "referencedColumnName": "id" }
+  ],
+  "rolledBackSteps": []
+}

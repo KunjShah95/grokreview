@@ -1,0 +1,81 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "@/features/auth/actions";
+import { getUserInstallationId } from "@/features/github/server/installation";
+import { getPullRequestFiles } from "@/features/reviews/server/pr-files";
+import { scanPullRequest, saveSecurityFindings, getSecurityFindings } from "@/features/security/server/scan-pr";
+import { canPerformAiAction, recordAiAction } from "@/features/billing/server/usage";
+import { prisma } from "@/lib/db";
+
+/**
+ * POST /api/security/scan
+ *
+ * Re-runs the security scan (secret detection + heuristic patterns +
+ * AI-assisted pass) for an already-reviewed pull request, replacing its
+ * previous findings.
+ *
+ * Body: { pullRequestId: string }
+ */
+export async function POST(request: Request) {
+  const session = await getServerSession();
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const installationId = await getUserInstallationId(session.user.id);
+  if (!installationId) {
+    return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
+  }
+
+  if (!(await canPerformAiAction(session.user.id))) {
+    return NextResponse.json(
+      { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including re-scans." },
+      { status: 429 }
+    );
+  }
+
+  const body = await request.json();
+  const { pullRequestId } = body;
+  if (!pullRequestId || typeof pullRequestId !== "string") {
+    return NextResponse.json({ error: "pullRequestId is required" }, { status: 400 });
+  }
+
+  const pullRequest = await prisma.pullRequest.findUnique({
+    where: { id: pullRequestId },
+  });
+
+  if (!pullRequest || pullRequest.installationId !== installationId) {
+    return NextResponse.json({ error: "Pull request not found" }, { status: 404 });
+  }
+
+  try {
+    const files = await getPullRequestFiles(
+      pullRequest.installationId,
+      pullRequest.repoFullName,
+      pullRequest.prNumber
+    );
+    const findings = await scanPullRequest(files);
+    await saveSecurityFindings(pullRequest.id, findings);
+    await recordAiAction(session.user.id, "security_scan");
+
+    // Return the persisted rows (with real ids) instead of the ephemeral
+    // scan output — the UI keys its findings list by id.
+    const persisted = await getSecurityFindings(pullRequest.id);
+    return NextResponse.json({
+      findings: persisted.map((f) => ({
+        id: f.id,
+        filePath: f.filePath,
+        line: f.line,
+        severity: f.severity,
+        category: f.category,
+        message: f.message,
+        suggestion: f.suggestion,
+      })),
+    });
+  } catch (error) {
+    console.error("[Security Scan API]", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Scan failed" },
+      { status: 500 }
+    );
+  }
+}

@@ -7,6 +7,7 @@ import {
   getRepoFiles,
   saveRepoChunks,
 } from "@/features/repo-sync/server/repo-sync";
+import { computeAndSaveSnapshot } from "@/features/code-health/server/compute-snapshot";
 
 export const syncRepoCodebaseFunction = inngest.createFunction({
   id: "sync-repo-codebase",
@@ -28,13 +29,20 @@ export const syncRepoCodebaseFunction = inngest.createFunction({
       });
     });
 
-    const chunks = await step.run("fetch-and-chunk-codebase", async () => {
-      const files = await getRepoFiles(
+    const files = await step.run("fetch-codebase", async () => {
+      return getRepoFiles(
         repoSync.installationId,
         repoSync.repoFullName,
         repoSync.branch
-      )
+      );
+    });
+
+    const chunks = await step.run("chunk-codebase", async () => {
       return chunkRepoFiles(files);
+    });
+
+    await step.run("compute-code-health", async () => {
+      await computeAndSaveSnapshot(repoSync.repoFullName, files);
     });
 
     const namespace = buildRepoNamespace(repoSync.repoFullName);

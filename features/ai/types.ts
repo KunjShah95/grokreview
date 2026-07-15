@@ -3,11 +3,12 @@
  * Supports OpenRouter, Groq, Mistral, HuggingFace, and Ollama.
  */
 
-export type AIProvider = 
+export type AIProvider =
   | "openrouter"
-  | "groq" 
-  | "mistral" 
-  | "huggingface" 
+  | "groq"
+  | "mistral"
+  | "huggingface"
+  | "gemini"
   | "ollama";
 
 export interface AIModel {
@@ -60,6 +61,11 @@ export const AVAILABLE_MODELS: AIModel[] = [
   { provider: "huggingface", modelId: "mistralai/Mistral-7B-Instruct-v0.3", label: "Mistral 7B Instruct (HF)", isFree: true },
   { provider: "huggingface", modelId: "meta-llama/Llama-3.2-3B-Instruct", label: "Llama 3.2 3B (HF)", isFree: true },
   { provider: "huggingface", modelId: "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B", label: "DeepSeek R1 1.5B (HF)", isFree: true },
+
+  // Gemini models (Google AI Studio — generous free tier, strong for RAG/chat)
+  { provider: "gemini", modelId: "gemini-2.0-flash", label: "Gemini 2.0 Flash", isFree: true },
+  { provider: "gemini", modelId: "gemini-2.0-flash-lite", label: "Gemini 2.0 Flash Lite", isFree: true },
+  { provider: "gemini", modelId: "gemini-1.5-pro", label: "Gemini 1.5 Pro", isFree: false },
 
   // Ollama models (local, detected dynamically)
   { provider: "ollama", modelId: "llama3.2", label: "Llama 3.2 (Local Ollama)", isFree: true },

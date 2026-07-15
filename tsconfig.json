@@ -31,5 +31,5 @@
     "**/*.mts",
     "types/**/*.d.ts"
   ],
-  "exclude": ["node_modules", "cli"]
+  "exclude": ["node_modules", "cli", "mcp"]
 }

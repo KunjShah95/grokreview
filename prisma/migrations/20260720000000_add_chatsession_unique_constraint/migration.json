@@ -1,0 +1,8 @@
+{
+  "version": "7.8",
+  "steps": [
+    { "tag": "DropIndex", "indexName": "chat_session_userId_repoFullName_idx" },
+    { "tag": "CreateIndex", "indexName": "chat_session_userId_repoFullName_key" }
+  ],
+  "rolledBackSteps": []
+}

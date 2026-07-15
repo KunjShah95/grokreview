@@ -1,9 +1,10 @@
 {
-  "name": "grokreview-cli",
+  "name": "grokreview",
   "version": "0.1.0",
-  "description": "GrokReview CLI - AI-powered GitHub PR reviews from your terminal. Bring your own model: Groq, Mistral, HuggingFace, OpenRouter, or local Ollama.",
+  "description": "GrokReview CLI - AI-powered GitHub PR reviews, security scans, and test generation from your terminal. Bring your own model: Groq, Mistral, HuggingFace, Gemini, OpenRouter, or local Ollama.",
   "type": "module",
   "bin": {
+    "grokreview": "dist/index.js",
     "pr-review": "dist/index.js"
   },
   "files": [
@@ -21,15 +22,17 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^4.0.10",
-    "@ai-sdk/huggingface": "^2.0.9",
-    "@ai-sdk/mistral": "^4.0.10",
-    "@ai-sdk/openai": "^4.0.13",
+    "@ai-sdk/google": "^3.0.93",
+    "@ai-sdk/groq": "^3.0.52",
+    "@ai-sdk/huggingface": "^1.0.62",
+    "@ai-sdk/mistral": "^3.0.49",
+    "@ai-sdk/openai": "^3.0.85",
     "ai": "^6.0.205",
     "chalk": "^5.3.0",
     "commander": "^12.0.0",
     "octokit": "^5.0.5",
-    "ora": "^8.0.1"
+    "ora": "^8.0.1",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
@@ -37,6 +40,7 @@
     "typescript": "^5.5.0"
   },
   "keywords": [
+    "grokreview",
     "pr-review",
     "code-review",
     "github",
@@ -45,8 +49,11 @@
     "pull-request",
     "groq",
     "mistral",
+    "gemini",
     "ollama",
     "openrouter",
+    "security-scanner",
+    "test-generation",
     "cli"
   ],
   "author": "Kunj Shah",

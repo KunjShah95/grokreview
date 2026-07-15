@@ -127,7 +127,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                 }}
                 disabled={isLoading}
               >
-                {["groq", "mistral", "huggingface", "openrouter"].map((p) => (
+                {["groq", "mistral", "huggingface", "gemini", "openrouter"].map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>
@@ -172,7 +172,7 @@ export function ModelComparison({ repoFullName, title, contextSnippets }: ModelC
                 }}
                 disabled={isLoading}
               >
-                {["groq", "mistral", "huggingface", "openrouter"].map((p) => (
+                {["groq", "mistral", "huggingface", "gemini", "openrouter"].map((p) => (
                   <option key={p} value={p}>{p}</option>
                 ))}
               </select>

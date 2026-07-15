@@ -1,0 +1,9 @@
+{
+  "version": "7.8",
+  "steps": [
+    { "tag": "CreateTable", "tableName": "ai_action_usage" },
+    { "tag": "CreateIndex", "indexName": "ai_action_usage_userId_createdAt_idx", "tableName": "ai_action_usage", "columns": ["userId", "createdAt"] },
+    { "tag": "AddForeignKey", "foreignKeyName": "ai_action_usage_userId_fkey", "tableName": "ai_action_usage", "columnName": "userId", "referencedTableName": "user", "referencedColumnName": "id" }
+  ],
+  "rolledBackSteps": []
+}
