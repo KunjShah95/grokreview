@@ -5,7 +5,7 @@ import { buildRepoNamespace } from "@/features/repo-sync/server/repo-sync";
 import { searchRepoContext } from "@/features/chat/server/retrieve";
 import { getChatHistory, getOrCreateChatSession, saveChatMessage } from "@/features/chat/server/chat-session";
 import { streamChatResponse } from "@/features/chat/server/stream-chat";
-import { canUserReview } from "@/features/billing/server/usage";
+import { canPerformAiAction, recordAiAction } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
 /**
@@ -58,7 +58,7 @@ export async function POST(
     return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
   }
 
-  if (!(await canUserReview(session.user.id))) {
+  if (!(await canPerformAiAction(session.user.id))) {
     return NextResponse.json(
       { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including repo chat." },
       { status: 429 }
@@ -84,6 +84,7 @@ export async function POST(
 
   const chatSession = await getOrCreateChatSession(session.user.id, repoFullName);
   await saveChatMessage({ chatSessionId: chatSession.id, role: "user", content: message });
+  await recordAiAction(session.user.id, "chat");
 
   const namespace = buildRepoNamespace(repoFullName);
   const contextChunks = await searchRepoContext(namespace, message);

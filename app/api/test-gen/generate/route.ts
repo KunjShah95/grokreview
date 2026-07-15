@@ -3,8 +3,8 @@ import { getServerSession } from "@/features/auth/actions";
 import { getUserInstallationId } from "@/features/github/server/installation";
 import { getPullRequestFiles } from "@/features/reviews/server/pr-files";
 import { generateTestsForPr } from "@/features/test-gen/server/generate-tests";
-import { saveGeneratedTests } from "@/features/test-gen/server/save-tests";
-import { canUserReview } from "@/features/billing/server/usage";
+import { saveGeneratedTests, getGeneratedTests } from "@/features/test-gen/server/save-tests";
+import { canPerformAiAction, recordAiAction } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
 /**
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
   }
 
-  if (!(await canUserReview(session.user.id))) {
+  if (!(await canPerformAiAction(session.user.id))) {
     return NextResponse.json(
       { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including test generation." },
       { status: 429 }
@@ -55,8 +55,20 @@ export async function POST(request: Request) {
     );
     const tests = await generateTestsForPr(files);
     await saveGeneratedTests(pullRequest.id, tests);
+    await recordAiAction(session.user.id, "test_gen");
 
-    return NextResponse.json({ tests });
+    // Return the persisted rows (with real ids) instead of the ephemeral
+    // generation output — the UI keys its test list by id.
+    const persisted = await getGeneratedTests(pullRequest.id);
+    return NextResponse.json({
+      tests: persisted.map((t) => ({
+        id: t.id,
+        filePath: t.filePath,
+        testFilePath: t.testFilePath,
+        framework: t.framework,
+        content: t.content,
+      })),
+    });
   } catch (error) {
     console.error("[Test Gen API]", error);
     return NextResponse.json(

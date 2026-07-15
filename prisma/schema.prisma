@@ -35,9 +35,21 @@ model User {
   githubInstallation  GithubInstallation?
   usageAlerts         UsageAlert[]
   chatSessions        ChatSession[]
+  aiActionUsage       AiActionUsage[]
 
   @@unique([email])
   @@map("user")
+}
+
+model AiActionUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String   // security_scan | test_gen | chat
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("ai_action_usage")
 }
 
 model GithubInstallation {

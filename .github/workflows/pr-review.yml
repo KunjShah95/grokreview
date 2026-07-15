@@ -106,7 +106,10 @@ jobs:
               try {
                 const response = JSON.parse(process.env.REVIEW_RESPONSE);
                 if (response) {
-                  if (response.status === 'reviewed') {
+                  if (response.status === 'reviewed' && response.securityBlocked) {
+                    conclusion = 'failure';
+                    summary = 'Blocked: the security scan found a leaked secret in this PR. See the review comment for details.';
+                  } else if (response.status === 'reviewed') {
                     conclusion = 'success';
                     summary = response.summary || 'Review completed successfully.';
                   } else if (response.status === 'failed') {

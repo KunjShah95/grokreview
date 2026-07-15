@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "@/features/auth/actions";
 import { getUserInstallationId } from "@/features/github/server/installation";
 import { getPullRequestFiles } from "@/features/reviews/server/pr-files";
-import { scanPullRequest, saveSecurityFindings } from "@/features/security/server/scan-pr";
-import { canUserReview } from "@/features/billing/server/usage";
+import { scanPullRequest, saveSecurityFindings, getSecurityFindings } from "@/features/security/server/scan-pr";
+import { canPerformAiAction, recordAiAction } from "@/features/billing/server/usage";
 import { prisma } from "@/lib/db";
 
 /**
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No GitHub installation found" }, { status: 403 });
   }
 
-  if (!(await canUserReview(session.user.id))) {
+  if (!(await canPerformAiAction(session.user.id))) {
     return NextResponse.json(
       { error: "Free plan limit reached. Upgrade to Pro for unlimited AI actions, including re-scans." },
       { status: 429 }
@@ -55,8 +55,22 @@ export async function POST(request: Request) {
     );
     const findings = await scanPullRequest(files);
     await saveSecurityFindings(pullRequest.id, findings);
+    await recordAiAction(session.user.id, "security_scan");
 
-    return NextResponse.json({ findings });
+    // Return the persisted rows (with real ids) instead of the ephemeral
+    // scan output — the UI keys its findings list by id.
+    const persisted = await getSecurityFindings(pullRequest.id);
+    return NextResponse.json({
+      findings: persisted.map((f) => ({
+        id: f.id,
+        filePath: f.filePath,
+        line: f.line,
+        severity: f.severity,
+        category: f.category,
+        message: f.message,
+        suggestion: f.suggestion,
+      })),
+    });
   } catch (error) {
     console.error("[Security Scan API]", error);
     return NextResponse.json(
